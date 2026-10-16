@@ -1,0 +1,17 @@
+[package]
+name = "trellis-store"
+description = "Trellis storage: content-addressed blob stores and the metadata store (changesets, CAS refs, derived data)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+trellis-core = { workspace = true }
+thiserror = { workspace = true }
+zstd = { workspace = true }
+rusqlite = { workspace = true }
+tempfile = { workspace = true }

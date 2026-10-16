@@ -1,0 +1,25 @@
+[package]
+name = "trellis-land"
+description = "Trellis sessions and landing: admission routing, three-way merges, CAS on main, receipts, and conflicts."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+trellis-core = { workspace = true }
+trellis-store = { workspace = true }
+trellis-merge = { workspace = true }
+trellis-derive = { workspace = true }
+trellis-coord = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+globset = { workspace = true }
+serde_yaml = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

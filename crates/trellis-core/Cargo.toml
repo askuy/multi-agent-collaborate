@@ -1,0 +1,20 @@
+[package]
+name = "trellis-core"
+description = "Core Trellis types: content hashes, repository paths, file kinds, and changesets with a canonical encoding."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+blake3 = { workspace = true }
+hex = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+serde_json = { workspace = true }

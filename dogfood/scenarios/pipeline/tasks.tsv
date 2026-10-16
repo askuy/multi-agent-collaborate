@@ -1,0 +1,5 @@
+Implement pipeline.text.normalize	Implement normalize in pipeline/text.py (tests/test_normalize.py); everything else builds on it.	pipeline/text.py
+Implement pipeline.slug.slugify	Implement slugify in pipeline/slug.py using pipeline.text.normalize (tests/test_slugify.py).	pipeline/slug.py
+Implement pipeline.tokens.tokenize	Implement tokenize in pipeline/tokens.py using pipeline.text.normalize (tests/test_tokenize.py).	pipeline/tokens.py
+Implement pipeline.stats.top_words	Implement top_words in pipeline/stats.py using pipeline.tokens.tokenize (tests/test_top_words.py).	pipeline/stats.py
+Implement pipeline.summary.summarize	Implement summarize in pipeline/summary.py using slugify, tokenize, and top_words (tests/test_summarize.py).	pipeline/summary.py

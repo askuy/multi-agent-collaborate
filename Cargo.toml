@@ -1,0 +1,45 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+[workspace.dependencies]
+trellis-core = { path = "crates/trellis-core" }
+trellis-store = { path = "crates/trellis-store" }
+trellis-merge = { path = "crates/trellis-merge" }
+trellis-derive = { path = "crates/trellis-derive" }
+blake3 = "1"
+hex = "0.4"
+thiserror = "2"
+zstd = "0.13"
+rusqlite = { version = "0.37", features = ["bundled"] }
+tempfile = "3"
+diffy = "0.4"
+serde_json = "1"
+serde_yaml = "0.9"
+proptest = "1"
+trellis-land = { path = "crates/trellis-land" }
+trellis-coord = { path = "crates/trellis-coord" }
+serde = { version = "1", features = ["derive"] }
+globset = "0.4"
+parking_lot = { version = "0.12", features = ["arc_lock"] }
+rand = "0.9"
+rand_chacha = "0.9"
+trellis-server = { path = "crates/trellis-server" }
+trellis-client = { path = "crates/trellis-client" }
+trellis-mcp = { path = "crates/trellis-mcp" }
+trellis-git = { path = "crates/trellis-git" }
+trellis-validate = { path = "crates/trellis-validate" }
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "signal"] }
+futures = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+clap = { version = "4", features = ["derive", "env"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"

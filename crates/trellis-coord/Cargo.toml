@@ -1,0 +1,18 @@
+[package]
+name = "trellis-coord"
+description = "Trellis coordination: tasks with atomic claims, leases on path scopes, and the append-only context log."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+trellis-core = { workspace = true }
+trellis-store = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+parking_lot = { workspace = true }

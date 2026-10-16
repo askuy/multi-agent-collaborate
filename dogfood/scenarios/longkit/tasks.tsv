@@ -1,0 +1,60 @@
+Implement kit.semver	Implement compare in kit/semver.py so that tests/test_semver.py passes, and add a CHANGELOG line.	kit/semver.py
+Implement kit.csvline	Implement parse in kit/csvline.py so that tests/test_csvline.py passes, and add a CHANGELOG line.	kit/csvline.py
+Implement kit.luhn	Implement valid, check_digit in kit/luhn.py so that tests/test_luhn.py passes, and add a CHANGELOG line.	kit/luhn.py
+Implement kit.roman	Implement to_roman, from_roman in kit/roman.py so that tests/test_roman.py passes, and add a CHANGELOG line.	kit/roman.py
+Implement kit.duration	Implement parse, format in kit/duration.py so that tests/test_duration.py passes, and add a CHANGELOG line.	kit/duration.py
+Implement kit.ranges	Implement expand, compress in kit/ranges.py so that tests/test_ranges.py passes, and add a CHANGELOG line.	kit/ranges.py
+Implement kit.edits	Implement distance, closest in kit/edits.py so that tests/test_edits.py passes, and add a CHANGELOG line.	kit/edits.py
+Implement kit.table	Implement render in kit/table.py so that tests/test_table.py passes, and add a CHANGELOG line.	kit/table.py
+Implement kit.wrap	Implement wrap in kit/wrap.py so that tests/test_wrap.py passes, and add a CHANGELOG line.	kit/wrap.py
+Implement kit.slug	Implement slugify in kit/slug.py so that tests/test_slug.py passes, and add a CHANGELOG line.	kit/slug.py
+Implement kit.intervals	Implement merge in kit/intervals.py so that tests/test_intervals.py passes, and add a CHANGELOG line.	kit/intervals.py
+Implement kit.bizdays	Implement add_business_days in kit/bizdays.py so that tests/test_bizdays.py passes, and add a CHANGELOG line.	kit/bizdays.py
+Implement kit.isbn	Implement valid, to_isbn13 in kit/isbn.py so that tests/test_isbn.py passes, and add a CHANGELOG line.	kit/isbn.py
+Implement kit.rle	Implement encode, decode in kit/rle.py so that tests/test_rle.py passes, and add a CHANGELOG line.	kit/rle.py
+Implement kit.spiral	Implement spiral in kit/spiral.py so that tests/test_spiral.py passes, and add a CHANGELOG line.	kit/spiral.py
+Implement kit.jsonpath	Implement get in kit/jsonpath.py so that tests/test_jsonpath.py passes, and add a CHANGELOG line.	kit/jsonpath.py
+Implement kit.temperature	Implement convert in kit/temperature.py so that tests/test_temperature.py passes, and add a CHANGELOG line.	kit/temperature.py
+Implement kit.bytesize	Implement format, parse in kit/bytesize.py so that tests/test_bytesize.py passes, and add a CHANGELOG line.	kit/bytesize.py
+Implement kit.query	Implement parse, build in kit/query.py so that tests/test_query.py passes, and add a CHANGELOG line.	kit/query.py
+Implement kit.reorder	Implement reorder in kit/reorder.py so that tests/test_reorder.py passes, and add a CHANGELOG line.	kit/reorder.py
+Implement kit.caesar	Implement shift in kit/caesar.py so that tests/test_caesar.py passes, and add a CHANGELOG line.	kit/caesar.py
+Implement kit.anagram	Implement groups in kit/anagram.py so that tests/test_anagram.py passes, and add a CHANGELOG line.	kit/anagram.py
+Implement kit.palindrome	Implement longest in kit/palindrome.py so that tests/test_palindrome.py passes, and add a CHANGELOG line.	kit/palindrome.py
+Implement kit.primes	Implement factorize, primes_up_to in kit/primes.py so that tests/test_primes.py passes, and add a CHANGELOG line.	kit/primes.py
+Implement kit.bowling	Implement score in kit/bowling.py so that tests/test_bowling.py passes, and add a CHANGELOG line.	kit/bowling.py
+Implement kit.password	Implement strength in kit/password.py so that tests/test_password.py passes, and add a CHANGELOG line.	kit/password.py
+Implement kit.case	Implement to_snake, to_camel in kit/case.py so that tests/test_case.py passes, and add a CHANGELOG line.	kit/case.py
+Implement kit.phone	Implement format in kit/phone.py so that tests/test_phone.py passes, and add a CHANGELOG line.	kit/phone.py
+Implement kit.matmul	Implement multiply in kit/matmul.py so that tests/test_matmul.py passes, and add a CHANGELOG line.	kit/matmul.py
+Implement kit.rpn	Implement evaluate in kit/rpn.py so that tests/test_rpn.py passes, and add a CHANGELOG line.	kit/rpn.py
+Implement kit.brackets	Implement balanced in kit/brackets.py so that tests/test_brackets.py passes, and add a CHANGELOG line.	kit/brackets.py
+Implement kit.wordfreq	Implement top in kit/wordfreq.py so that tests/test_wordfreq.py passes, and add a CHANGELOG line.	kit/wordfreq.py
+Implement kit.lcs	Implement length, sequence in kit/lcs.py so that tests/test_lcs.py passes, and add a CHANGELOG line.	kit/lcs.py
+Implement kit.baseconv	Implement to_base, from_base in kit/baseconv.py so that tests/test_baseconv.py passes, and add a CHANGELOG line.	kit/baseconv.py
+Implement kit.iban	Implement valid in kit/iban.py so that tests/test_iban.py passes, and add a CHANGELOG line.	kit/iban.py
+Implement kit.color	Implement hex_to_rgb, rgb_to_hex in kit/color.py so that tests/test_color.py passes, and add a CHANGELOG line.	kit/color.py
+Implement kit.clock12	Implement to_24h, to_12h in kit/clock12.py so that tests/test_clock12.py passes, and add a CHANGELOG line.	kit/clock12.py
+Implement kit.months	Implement is_leap, days_in_month in kit/months.py so that tests/test_months.py passes, and add a CHANGELOG line.	kit/months.py
+Implement kit.age	Implement age in kit/age.py so that tests/test_age.py passes, and add a CHANGELOG line.	kit/age.py
+Implement kit.pagination	Implement pages in kit/pagination.py so that tests/test_pagination.py passes, and add a CHANGELOG line.	kit/pagination.py
+Implement kit.income	Implement tax in kit/income.py so that tests/test_income.py passes, and add a CHANGELOG line.	kit/income.py
+Implement kit.loan	Implement payment in kit/loan.py so that tests/test_loan.py passes, and add a CHANGELOG line.	kit/loan.py
+Implement kit.allocate	Implement allocate in kit/allocate.py so that tests/test_allocate.py passes, and add a CHANGELOG line.	kit/allocate.py
+Implement kit.serial	Implement next_id in kit/serial.py so that tests/test_serial.py passes, and add a CHANGELOG line.	kit/serial.py
+Implement kit.email	Implement normalize in kit/email.py so that tests/test_email.py passes, and add a CHANGELOG line.	kit/email.py
+Implement kit.paths	Implement normalize in kit/paths.py so that tests/test_paths.py passes, and add a CHANGELOG line.	kit/paths.py
+Implement kit.grades	Implement letter in kit/grades.py so that tests/test_grades.py passes, and add a CHANGELOG line.	kit/grades.py
+Implement kit.shipping	Implement cost in kit/shipping.py so that tests/test_shipping.py passes, and add a CHANGELOG line.	kit/shipping.py
+Implement kit.coupons	Implement apply in kit/coupons.py so that tests/test_coupons.py passes, and add a CHANGELOG line.	kit/coupons.py
+Implement kit.freeslots	Implement free in kit/freeslots.py so that tests/test_freeslots.py passes, and add a CHANGELOG line.	kit/freeslots.py
+Implement kit.histogram	Implement render in kit/histogram.py so that tests/test_histogram.py passes, and add a CHANGELOG line.	kit/histogram.py
+Implement kit.morse	Implement encode, decode in kit/morse.py so that tests/test_morse.py passes, and add a CHANGELOG line.	kit/morse.py
+Implement kit.nato	Implement spell in kit/nato.py so that tests/test_nato.py passes, and add a CHANGELOG line.	kit/nato.py
+Implement kit.numwords	Implement say in kit/numwords.py so that tests/test_numwords.py passes, and add a CHANGELOG line.	kit/numwords.py
+Implement kit.ordinal	Implement ordinal in kit/ordinal.py so that tests/test_ordinal.py passes, and add a CHANGELOG line.	kit/ordinal.py
+Implement kit.scrabble	Implement score in kit/scrabble.py so that tests/test_scrabble.py passes, and add a CHANGELOG line.	kit/scrabble.py
+Implement kit.isogram	Implement is_isogram in kit/isogram.py so that tests/test_isogram.py passes, and add a CHANGELOG line.	kit/isogram.py
+Implement kit.pangram	Implement missing in kit/pangram.py so that tests/test_pangram.py passes, and add a CHANGELOG line.	kit/pangram.py
+Implement kit.acronym	Implement make in kit/acronym.py so that tests/test_acronym.py passes, and add a CHANGELOG line.	kit/acronym.py
+Implement kit.series	Implement largest_product in kit/series.py so that tests/test_series.py passes, and add a CHANGELOG line.	kit/series.py

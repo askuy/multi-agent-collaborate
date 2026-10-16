@@ -1,0 +1,22 @@
+[package]
+name = "trellis-validate"
+description = "Trellis validation after landing: run checks on each landed changeset; failures become FAIL entries and repair tasks."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+trellis-core = { workspace = true }
+trellis-coord = { workspace = true }
+trellis-land = { workspace = true }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+trellis-store = { workspace = true }
+tempfile = { workspace = true }

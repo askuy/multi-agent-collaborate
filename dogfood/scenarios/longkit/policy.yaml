@@ -1,0 +1,10 @@
+# Trellis policy for the longkit dogfooding run: concurrent CHANGELOG appends keep both sides,
+# and the test suite runs after every landing.
+rules:
+  - pattern: "CHANGELOG.md"
+    merge: union
+validators:
+  - name: tests
+    scope: ["kit/**", "tests/**"]
+    command: ["python3", "-m", "unittest", "discover", "-s", "tests"]
+    timeout_seconds: 120

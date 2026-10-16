@@ -1,0 +1,5 @@
+Migrate shop.money to integer cents	Move shop/money.py to version 2 (API_VERSION = 2): replace parse_amount and format_amount with to_cents(text) -> int and format_cents(cents: int) -> str, which raises TypeError for anything but an int (tests/test_money.py). Update every caller in shop/ so that the whole test suite passes, and add a CHANGELOG line.	shop/**
+Implement shop.tax.add_tax	Implement add_tax in shop/tax.py, parsing and formatting amounts with shop.money (tests/test_tax.py), and add a CHANGELOG line.	shop/tax.py
+Implement shop.discount.apply_discount	Implement apply_discount in shop/discount.py, parsing and formatting amounts with shop.money (tests/test_discount.py), and add a CHANGELOG line.	shop/discount.py
+Implement shop.split.split_bill	Implement split_bill in shop/split.py, parsing and formatting amounts with shop.money (tests/test_split.py), and add a CHANGELOG line.	shop/split.py
+Implement shop.receipt.render	Implement render in shop/receipt.py, parsing and formatting amounts with shop.money and computing the total with shop.tax.add_tax (tests/test_receipt.py), and add a CHANGELOG line.	shop/receipt.py

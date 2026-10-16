@@ -1,0 +1,20 @@
+[package]
+name = "trellis-sim"
+description = "Deterministic simulation of many agents landing on Trellis, with fault injection and invariant checks."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+trellis-core = { workspace = true }
+trellis-store = { workspace = true }
+trellis-derive = { workspace = true }
+trellis-land = { workspace = true }
+trellis-coord = { workspace = true }
+serde_json = { workspace = true }
+rand = { workspace = true }
+rand_chacha = { workspace = true }

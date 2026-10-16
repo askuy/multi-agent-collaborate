@@ -1,0 +1,2926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>(function(){var t=localStorage.getItem("oak-theme")||"auto";if(t==="dark"||(t==="auto"&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.classList.add("dark");})()</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oak dev blog · oak</title>
+    <meta name="version" content="fd89883a">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="alternate icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>">
+    <meta name="description" content="Notes from building Oak — version control for agents. Branch-per-session workflows, team and project scoping, and lazy mounts for agent-driven development.">
+    <meta property="og:description" content="Notes from building Oak — version control for agents. Branch-per-session workflows, team and project scoping, and lazy mounts for agent-driven development.">
+    <meta name="twitter:description" content="Notes from building Oak — version control for agents. Branch-per-session workflows, team and project scoping, and lazy mounts for agent-driven development.">
+    <link rel="canonical" href="https://oak.space/blog">
+    <meta property="og:url" content="https://oak.space/blog">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Oak">
+    <meta property="og:title" content="Oak dev blog">
+    <meta property="og:image" content="https://oak.space/social-card-217ab603.png">
+    <meta property="og:image:secure_url" content="https://oak.space/social-card-217ab603.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Oak — version control for humans and agents building software together.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Oak dev blog">
+    <meta name="twitter:image" content="https://oak.space/social-card-217ab603.png">
+    <meta name="twitter:image:alt" content="Oak — version control for humans and agents building software together.">
+    
+    <script async src="https://plausible.io/js/pa-w9xnsk_sH8k6Dkaf4QgtA.js"></script>
+    <script>
+      window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+      plausible.init()
+    </script>
+    <link rel="stylesheet" href="/tailwind.css?v=f0a867b2">
+    <link rel="preload" as="font" type="font/woff2" href="/inter-latin-wght-normal.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="/jetbrains-mono-latin-wght-normal.woff2" crossorigin>
+    <script>window.oakReady=function(f){if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',f);}else{f();}};</script>
+    
+    <script defer src="/cover-shader.js"></script>
+    <script type="speculationrules">
+    {
+      "prefetch": [{
+        "source": "document",
+        "where": {
+          "and": [
+            { "href_matches": "/*" },
+            { "not": { "href_matches": "/api/*" } },
+            { "not": { "href_matches": "/logout" } },
+            { "not": { "selector_matches": "[data-no-prefetch]" } },
+            { "not": { "selector_matches": "[download]" } },
+            { "not": { "selector_matches": "[rel~=external]" } }
+          ]
+        },
+        "eagerness": "eager"
+      }]
+    }
+    </script>
+    <style>
+        /* Oak design tokens — warm paper, ink, moss.
+           Light mode: 'washi'-style off-white, with restrained green accent.
+           Dark mode: deep, near-black with the same accents desaturated. */
+        /* Stored as space-separated RGB triplets so Tailwind's
+           opacity-modifier syntax (`bg-oak-moss/30`) can plug them into the
+           v4 theme variables defined in crates/oak-web/tailwind/input.css.
+           Every CSS usage wraps the var in `rgb(...)`. */
+        :root {
+            /* Core is black on white — whiter whites, reversed in dark mode.
+               Accent is a vibrant solar orange (brand/primary) plus an electric
+               teal (secondary), both tuned to clear WCAG AA on the paper behind
+               them. Stored as `R G B` triplets for Tailwind's opacity modifier. */
+            --oak-paper: 255 255 255;      /* page bg — pure white */
+            --oak-paper-2: 245 245 245;    /* subtle panel bg — neutral grey */
+            --oak-ink: 10 10 10;           /* primary text — near-black */
+            --oak-ink-soft: 74 74 74;      /* secondary text — neutral grey */
+            --oak-line: 218 218 218;       /* hairline — neutral grey (matches homepage --home-border) */
+            --oak-line-strong: 184 184 184;
+            /* The 2026-06 redesign leans hard into black & white: hue is reserved
+               for genuinely semantic states (destructive red, warning gold) and
+               the brand mark. The workhorse accent --oak-moss is repointed from
+               solar orange to ink, which turns every button / link / active state
+               that references it monochrome without editing 300+ call sites. */
+            --oak-moss: 10 10 10;          /* primary accent — ink (was solar orange) */
+            --oak-moss-soft: 64 64 64;     /* hover / rings — soft ink */
+            --oak-moss-pale: 240 240 240;  /* active-row tint — pale grey */
+            --oak-vermilion: 198 40 40;    /* red — regressions / destructive (sparing) */
+            --oak-amber: 176 88 12;        /* gold — warning / "behind" (sparing) */
+            --oak-cyan: 15 118 110;        /* teal — sparing semantic accent */
+            --oak-brand: #6ca232;          /* brand green — the ↟ mark stays green */
+            --oak-green: 62 110 20;        /* diff-add / success ink — AA on white, #3E6E14 (sparing) */
+
+            /* Shared monospace stack — the redesign's terminal aesthetic uses it
+               site-wide for body, chrome, and titles (matches the homepage
+               --hp-mono). JetBrains Mono stays the fallback for older glyphs. */
+            --oak-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            /* Square corners everywhere (buttons, cards, inputs, panels). Only
+               circles survive (rounded-full → avatars, dots). Overriding these
+               theme vars unlayered beats Tailwind's @layer theme defaults, so
+               every rounded-xs/sm/md/lg/xl/2xl/3xl utility collapses to 0. */
+            --radius-xs: 0px; --radius-sm: 0px; --radius-md: 0px;
+            --radius-lg: 0px; --radius-xl: 0px; --radius-2xl: 0px; --radius-3xl: 0px;
+
+            /* Canonical page width — the single source of truth for how wide
+               the header, body, and footer frame the page on every view.
+               Set to 100% so pages are full-bleed and left-aligned: content
+               stretches edge to edge with no centered max-width gutter.
+               `REPO_CONTENT_MAX_W` and the `.oak-page-frame` utility both
+               point here, so header / body / footer never drift apart. */
+            --oak-page-w: 100%;
+        }
+        html.dark {
+            --oak-paper: 0 0 0;            /* page bg — pure black (matches homepage --home-bg) */
+            --oak-paper-2: 20 20 20;       /* subtle panel bg — neutral */
+            --oak-ink: 245 245 245;        /* whiter whites */
+            --oak-ink-soft: 160 160 160;
+            --oak-line: 64 64 64;          /* hairline — neutral (matches homepage --home-border) */
+            --oak-line-strong: 90 90 90;
+            /* Ink accent, near-white on black. Used as a *text* colour (links,
+               active states, focus rings). Solid `bg-oak-moss` buttons hardcode
+               white text, so they get force-darkened to charcoal in the dark
+               override block below (same trick as bg-oak-ink). */
+            --oak-moss: 245 245 245;       /* primary accent — ink */
+            --oak-moss-soft: 200 200 200;
+            --oak-moss-pale: 28 28 28;     /* active-row tint */
+            --oak-vermilion: 240 130 120;  /* red — sparing */
+            --oak-amber: 230 170 90;       /* warning — sparing */
+            --oak-cyan: 45 226 200;        /* teal — sparing */
+            --oak-brand: #8fce46;          /* brand green — the ↟ mark stays green */
+            --oak-green: 143 206 70;       /* diff-add / success — matches the mark, #8FCE46 (sparing) */
+        }
+        /* Canonical page frame. A page's top-level content region spans the
+           full width the header and footer use (`--oak-page-w` = 100%) and is
+           left-aligned, so the header, body, and footer edges line up flush on
+           every view. Replaces the assorted `max-w-*xl mx-auto` page wrappers.
+           Inner cards / forms can still self-constrain narrower within this
+           frame. */
+        .oak-page-frame {
+            max-width: var(--oak-page-w);
+            margin-inline: 0;
+            width: 100%;
+        }
+        /* Site-wide base font is Inter — body copy, buttons, titles,
+           and UI chrome all use it. Monospace (JetBrains Mono) is reserved for
+           actual code: code/pre blocks, diffs, commit hashes, file paths,
+           branch names, and CLI command snippets, which opt in explicitly via
+           `code`/`pre`/`.font-mono` or component classes below. Tailwind's
+           text-sm/text-base/font-medium/font-semibold utilities still apply on
+           top — they set size/weight, not family. */
+        body {
+            font-family: var(--oak-mono);
+            font-size: 13.5px;
+            line-height: 1.55;
+            background-color: rgb(var(--oak-paper));
+            color: rgb(var(--oak-ink));
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+        /* Inline link affordance in the monochrome scheme: links coloured with
+           the (now ink) accent are otherwise indistinguishable from body text,
+           so underline anchors that opt into the accent colour. */
+        a.text-oak-moss, a.text-oak-moss:hover { text-decoration: underline; text-underline-offset: 2px; }
+        .bg-oak-paper { background-color: rgb(var(--oak-paper)); }
+        .bg-oak-paper-2 { background-color: rgb(var(--oak-paper-2)); }
+        .text-oak-ink { color: rgb(var(--oak-ink)); }
+        .text-oak-ink-soft { color: rgb(var(--oak-ink-soft)); }
+        .border-oak-line { border-color: rgb(var(--oak-line)); }
+        .border-oak-line-strong { border-color: rgb(var(--oak-line-strong)); }
+        .text-oak-moss { color: rgb(var(--oak-moss)); }
+        .bg-oak-ink { background-color: rgb(var(--oak-ink)); }
+        .bg-oak-moss { background-color: rgb(var(--oak-moss)); }
+        .bg-oak-moss-pale { background-color: rgb(var(--oak-moss-pale)); }
+        .ring-oak-moss { --tw-ring-color: rgb(var(--oak-moss)); }
+        /* Shared *terminal* surface for monospace output blocks (CI step logs,
+           one-time secret reveals) — not a themed panel: it stays dark in both
+           modes with its own light foreground, which is what keeps the ANSI
+           palette in `ansi.rs` valid. Blocks like these used to ride on
+           `bg-oak-ink text-oak-paper`, which reverses in dark mode — the block
+           lightened to the #2f2e29 override while the text flipped to pure
+           black, leaving uncoloured output at ~1.6:1. Reach for this class on
+           any new <pre>/<code> block instead of that pair. */
+        .term-surface { background-color: #161513; color: #e6e4df; }
+        /* CI log workflow commands (`::group::`, `::error::`, …), rendered by
+           `repo_pages::ci_log_line_html` inside a .term-surface block. */
+        .term-surface .ci-log-group { color: #f5f3ee; font-weight: 600; }
+        .term-surface .ci-log-error { color: #ff8a80; }
+        .term-surface .ci-log-warning { color: #ffd166; }
+        .term-surface .ci-log-notice { color: #8ecbff; }
+        /* Brand green (--oak-brand), used by the branch-detail Merge button so
+           the primary action carries the oak-green brand accent. Mode-aware via
+           the custom property; dark text keeps the label readable on the green
+           fill. */
+        .btn-oak-brand { background-color: var(--oak-brand); border-color: var(--oak-brand); color: #0a0a09; }
+        .btn-oak-brand:hover { filter: brightness(1.06); }
+
+        /* Display face — mono, matching the homepage's new sections. */
+        .font-title {
+            font-family: var(--oak-mono);
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        /* Square corners on the bare `.rounded` utility (Tailwind hardcodes it to
+           0.25rem, so the --radius-* var overrides don't reach it). Unlayered, so
+           it beats Tailwind's utilities layer. */
+        .rounded { border-radius: 0; }
+        code, pre, .font-mono, .tabular-nums { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-feature-settings: 'calt', 'ss01'; }
+
+        /* Legacy top-nav link styling.
+           Inter, lowercase, with a `$ ` prompt prefix on hover/active
+           to echo the terminal aesthetic established on the homepage. */
+        .nav-link, .nav-link-active {
+            position: relative;
+            font-size: 0.8125rem;
+            letter-spacing: -0.005em;
+            transition: color 0.15s ease;
+        }
+        .nav-link { color: rgb(var(--oak-ink-soft)); }
+        .nav-link:hover { color: rgb(var(--oak-ink)); }
+        .nav-link-active {
+            color: rgb(var(--oak-ink));
+            font-weight: 500;
+        }
+        .nav-link-active::before {
+            content: '$ ';
+            color: rgb(var(--oak-moss));
+            font-weight: 500;
+        }
+
+        /* Footer chrome — Inter, mute, with a `//` comment prefix on
+           the column headers to echo the homepage marketing eyebrows. */
+        .site-footer {
+            font-size: 13px;
+        }
+        .footer-col-h {
+            font-size: 11px;
+            color: var(--hp-ink-mute);
+            margin-bottom: 12px;
+            letter-spacing: 0.02em;
+        }
+        .footer-link {
+            color: rgb(var(--oak-ink-soft));
+            transition: color 0.15s ease;
+        }
+        .footer-link:hover { color: rgb(var(--oak-ink)); }
+
+        /* Repo left-side tab nav — narrow vertical column of pill links.
+           Padding is set longhand so Tailwind utilities like `pl-11` on
+           nested rows (repos under an organization) can override the
+           left side without the shorthand wiping them out.
+
+           Horizontal margin insets the rounded corners from the sidebar
+           border so the active-row highlight has breathing room and
+           doesn't look clipped against the right edge. */
+        .repo-side-link {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            margin-left: 0.375rem;
+            margin-right: 0.375rem;
+            border-radius: 0;
+            color: rgb(var(--oak-ink-soft));
+            font-size: 0.875rem;
+            line-height: 1.3;
+            transition: background-color 0.1s ease, color 0.1s ease;
+            white-space: nowrap;
+        }
+        .repo-side-link:hover {
+            color: rgb(var(--oak-ink));
+            background-color: rgba(0,0,0,0.035);
+        }
+        html.dark .repo-side-link:hover { background-color: rgba(255,255,255,0.04); }
+        .repo-side-link.is-active {
+            color: rgb(var(--oak-ink));
+            background-color: rgb(var(--oak-moss-pale));
+            font-weight: 500;
+        }
+        /* Base size for any SVG marked `.ico` — used by sidebar links, the
+           header tab pills, branch pills, and other inline-icon callouts.
+           Without this rule the SVGs fall back to the browser default
+           (300×150), which either overflows the row or gets clipped. */
+        .ico {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+        .repo-side-link .ico { color: rgb(var(--oak-ink-soft)); }
+        .repo-side-link.is-active .ico { color: rgb(var(--oak-moss)); }
+        /* Custom per-repo emoji icon. Pinned to the same 16×16
+           box as `.ico` so rows align identically whether the entry uses
+           an SVG icon or a user-chosen emoji — otherwise the emoji glyph
+           sets its own line-box and the row text drifts up or down
+           relative to its neighbors. */
+        .repo-side-emoji {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            font-size: 14px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* Subtle inner panel — used for file-list / diff / commit-list cards. */
+        .surface {
+            background-color: rgb(var(--oak-paper));
+            border: 1px solid rgb(var(--oak-line));
+            border-radius: 0;
+        }
+        .surface-2 {
+            background-color: rgb(var(--oak-paper-2));
+            border: 1px solid rgb(var(--oak-line));
+            border-radius: 0;
+        }
+        .oak-app-header-text {
+            font-size: 14px;
+            line-height: 20px;
+        }
+        .oak-app-header-text > * {
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        /* Home org-filter chips — flat, square, white to match the marketing
+           homepage. The active filter inverts to solid ink (the same
+           primary-control treatment the homepage uses), driven by the
+           `aria-pressed` attribute that HOME_FILTER_SCRIPT keeps in sync. */
+        .home-org-chip,
+        .home-org-create-chip {
+            font-size: 14px;
+            line-height: 20px;
+        }
+        .home-org-chip > *,
+        .home-org-create-chip > * {
+            font-size: inherit;
+            line-height: inherit;
+        }
+        .home-org-chip {
+            border: 1px solid rgb(var(--oak-line));
+            background: rgb(var(--oak-paper));
+            color: rgb(var(--oak-ink-soft));
+        }
+        .home-org-chip:hover {
+            border-color: rgb(var(--oak-ink));
+            color: rgb(var(--oak-ink));
+        }
+        .home-org-chip[aria-pressed="true"] {
+            background: rgb(var(--oak-ink));
+            border-color: rgb(var(--oak-ink));
+            color: rgb(var(--oak-paper));
+        }
+        .storage-usage-meter {
+            color: rgb(var(--oak-ink));
+            border-color: currentColor;
+            background-image: repeating-linear-gradient(
+                135deg,
+                color-mix(in srgb, currentColor 18%, transparent) 0 1px,
+                transparent 1px 6px
+            );
+        }
+        .storage-usage-meter__fill {
+            background-color: currentColor;
+        }
+
+        /* File-list row inside diff/commit panes — selected = green accent. */
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.8125rem;
+            color: rgb(var(--oak-ink-soft));
+            border-left: 2px solid transparent;
+            cursor: pointer;
+            transition: background-color 0.1s ease, color 0.1s ease;
+        }
+        .file-row:hover { background-color: rgba(0,0,0,0.035); color: rgb(var(--oak-ink)); }
+        html.dark .file-row:hover { background-color: rgba(255,255,255,0.04); }
+        .file-row.is-active {
+            background-color: rgb(var(--oak-moss-pale));
+            color: rgb(var(--oak-ink));
+            border-left-color: rgb(var(--oak-moss));
+        }
+        .file-row .change-badge {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            line-height: 1;
+            padding: 2px 5px;
+            border-radius: 0;
+            flex-shrink: 0;
+        }
+        /* Diff add/remove keep their semantic green/red — the canonical "sparing
+           colour" the redesign still allows. (oak-moss is now ink, so badge-A
+           points at oak-green to stay green.) */
+        .badge-A { background-color: rgba(63,107,58,0.10); color: rgb(var(--oak-green)); }
+        .badge-M { background-color: rgba(185,140,40,0.12); color: #8a6614; }
+        html.dark .badge-M { color: #d4a437; }
+        .badge-D { background-color: rgba(185,83,61,0.12); color: rgb(var(--oak-vermilion)); }
+        .badge-R { background-color: rgba(80,120,160,0.12); color: #4a7896; }
+
+        /* Tree details chevron rotation */
+        details[open] > summary .details-chevron { transform: rotate(90deg); }
+
+        /* Tree item hover (repo file browser) */
+        .tree-entry { transition: background-color 0.1s ease; }
+        .tree-entry:hover { background-color: rgba(0,0,0,0.035); }
+        .tree-entry.active { background-color: rgb(var(--oak-moss-pale)); border-right: 2px solid rgb(var(--oak-moss)); }
+        /* Keyboard-nav focus states (see /keyboard-nav.js): same ring the
+           branch rows use (`.b-list-row:focus-within`), inset so it never
+           clips against the pane edge. #file-content is a tabbable scroll
+           pane — the inset outline marks it active. */
+        .tree-entry:focus-visible { outline: 2px solid rgb(var(--oak-moss)); outline-offset: -2px; }
+        .tree-entry:focus-visible:not(.active) { background-color: rgba(0,0,0,0.035); }
+        .file-row:focus-visible { outline: 2px solid rgb(var(--oak-moss)); outline-offset: -2px; }
+        #file-content:focus-visible { outline: 2px solid rgb(var(--oak-moss)); outline-offset: -2px; }
+
+        /* Code line numbers */
+        .line-numbers { counter-reset: line; }
+        .line-numbers .line { counter-increment: line; }
+        .line-numbers .line::before {
+            content: counter(line);
+            display: inline-block;
+            width: 3.5em;
+            padding-right: 1em;
+            text-align: right;
+            color: #9ca3af;
+            user-select: none;
+            font-size: 0.8em;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 0; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        /* Branch/commit detail scrollers — match the thin, theme-aware scrollbar
+           the branches list uses (`.branches-scroll`) instead of inheriting the
+           hardcoded light-gray global thumb above, which reads as a bright/heavy
+           bar in dark mode. Defined globally so it applies on both the inline
+           branch fragment and the standalone commit-detail page. */
+        .oak-detail-scroll { scrollbar-width: thin; scrollbar-color: rgb(var(--oak-line)) transparent; }
+        .oak-detail-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .oak-detail-scroll::-webkit-scrollbar-track { background: transparent; }
+        .oak-detail-scroll::-webkit-scrollbar-thumb { background: rgb(var(--oak-line)); border-radius: 0; }
+        .oak-detail-scroll::-webkit-scrollbar-thumb:hover { background: rgb(var(--oak-ink-soft)); }
+
+        /* Hide scrollbar utility */
+        .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* ---- Mobile responsiveness baseline ----
+           Guard rails so a single overflowing element can't break the
+           whole page layout on narrow screens. Most app pages already
+           use sm: breakpoints for their own structure; these rules
+           catch the common edge cases (long URLs, wide tables, big
+           code blocks) that creep in via markdown content or third-
+           party HTML.
+
+           Note: we deliberately avoid `overflow-x: hidden` on html/body
+           — that would break `position: sticky` on the top nav. Each
+           overflow source is contained at its own boundary instead. */
+        /* Markdown/blog images shouldn't blow past the prose column on
+           narrow screens. Scoped so layout icons (sized SVGs) are left
+           alone. */
+        .markdown-body img, .prose-blog img { max-width: 100%; height: auto; }
+        /* Long URLs / inline code shouldn't push prose pages wider than
+           the viewport. `anywhere` lets the browser break mid-word at
+           any character when nothing else fits. */
+        .markdown-body, .prose-blog { overflow-wrap: anywhere; }
+        /* When prose is a flex/grid item (chat bubbles, branch-description
+           rail, sidebar+content splits), it must be allowed to shrink below
+           its content's intrinsic width — otherwise a wide `pre` code block
+           sets the item's min-content size and blows the column out past the
+           viewport instead of letting `pre { overflow-x: auto }` scroll it.
+           `min-width: 0` is a no-op in normal block flow, so it's safe to
+           apply globally to every prose surface. */
+        .markdown-body, .prose-blog { min-width: 0; }
+        /* Pre/code blocks scroll horizontally rather than forcing the
+           page wider. Most explicit pre blocks already have
+           overflow-x-auto via Tailwind; this catches the rest. */
+        pre { max-width: 100%; overflow-x: auto; }
+        /* Markdown tables become a horizontally scrollable wrapper so a
+           wide data table doesn't blow out the prose column. `display:
+           block` flips them from layout-table to scrollable container. */
+        .markdown-body table { display: block; max-width: 100%; overflow-x: auto; }
+        @media (max-width: 640px) {
+            /* Page-level h1's set with Tailwind text-4xl+ can push the
+               chrome wider than 375px for wordy titles. Soft clamp so
+               the title shrinks to fit on phones without affecting
+               desktop sizing. */
+            h1.font-title { font-size: clamp(1.75rem, 8vw, 2.25rem); line-height: 1.1; }
+            /* Settings / docs / repo tabs use `nav class="flex gap-6"`
+               — 5+ tabs overflow past 375px. Make the row horizontally
+               scrollable on mobile and prevent each tab from being
+               squished. The .no-scrollbar utility already exists; we
+               just inline the same trick scoped to these nav rows. */
+            nav.flex.gap-6 {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            nav.flex.gap-6::-webkit-scrollbar { display: none; }
+            nav.flex.gap-6 > * { white-space: nowrap; flex-shrink: 0; }
+        }
+
+        /* When a `.sidebar-resizable` aside stacks above the main pane on
+           narrow viewports (parent is `flex-col` until `sm:flex-row`),
+           cap its height so a long file tree / commit list / file list
+           doesn't push the actual content area hundreds of pixels below
+           the fold. The desktop rule at `min-width: 640px` further down
+           still pins `flex-basis` for side-by-side layout, so this only
+           kicks in while stacked. */
+        @media (max-width: 639px) {
+            .sidebar-resizable {
+                max-height: 50vh;
+                overflow-y: auto;
+            }
+            /* …except inside the Code view's file browser and the
+               branch/commit detail shell. There the surrounding pane is the
+               single scroll container on mobile, so the file tree / detail
+               aside flow at natural height and the user scrolls straight down
+               through the whole file or diff — no nested scrollbars squeezing
+               the content into a sliver at the bottom. */
+            [data-code-view] .sidebar-resizable,
+            [data-detail-shell] .sidebar-resizable {
+                max-height: none;
+                overflow-y: visible;
+            }
+        }
+        /* Hide details marker */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+
+        /* Highlight.js overrides */
+        .hljs { background: transparent !important; padding: 0 !important; }
+
+        /* ─── Text diffs (repo_pages::diff_render) ──────────────────────────
+           Diff rows wrap their content in `<code class="language-…">` so the
+           same highlight.js pass the file view uses tokenizes them too, and
+           `oakHighlightDiff` then re-applies the server-computed intraline
+           (word-level) ranges as `.oak-il` spans on top of the tokens.
+
+           Two things have to hold for that to read well:
+
+           1. Nothing inside a row may paint its own background — the +/- row
+              tint *is* the diff signal. highlight.js' `.hljs` wrapper, the bare
+              `<code>` element (which dark mode otherwise gives a chip
+              background), and hljs' own `.hljs-addition`/`.hljs-deletion`
+              colours (which fire when the diffed file is itself a `.diff` /
+              `.patch`) all have to be flattened, or a diff of a patch file
+              renders green boxes inside green rows.
+           2. Contrast. Syntax tokens sit on a tinted row and, where a word
+              changed, on the *intraline* tint on top of that — the darkest
+              background any diff text sees. Every colour below was checked
+              against that worst case: light mode needs relative luminance
+              ≤ 0.124 to clear 4.5:1 on the intraline red/green, which four of
+              the stock github-light token groups (comment, built_in, keyword,
+              name/quote) miss, so they are darkened here. The dark-mode
+              github-dark palette (further down, `html.dark .hljs-*`) already
+              clears 4.5:1 on our dark intraline tints with margin, so it is
+              left alone; only the intraline alphas were chosen to keep it
+              there. Scoped to `.oak-diff` on purpose: file views sit on flat
+              paper and don't need the extra headroom. */
+        .oak-diff code { background: transparent !important; padding: 0 !important; border: 0; }
+        .oak-diff .hljs-addition, .oak-diff .hljs-deletion { background: transparent !important; }
+        .oak-diff .hljs-comment, .oak-diff .hljs-code, .oak-diff .hljs-formula { color: #5a6169; }
+        .oak-diff .hljs-doctag, .oak-diff .hljs-keyword, .oak-diff .hljs-meta .hljs-keyword,
+        .oak-diff .hljs-template-tag, .oak-diff .hljs-template-variable, .oak-diff .hljs-type,
+        .oak-diff .hljs-variable.language_, .oak-diff .hljs-deletion { color: #a40e26; }
+        .oak-diff .hljs-built_in, .oak-diff .hljs-symbol { color: #8a3d00; }
+        .oak-diff .hljs-name, .oak-diff .hljs-quote, .oak-diff .hljs-selector-tag,
+        .oak-diff .hljs-selector-pseudo, .oak-diff .hljs-addition { color: #116329; }
+        /* Intraline marks: a light wash plus a solid underline. The wash alone
+           would have to be strong enough to see, which is exactly what eats the
+           contrast budget above; the underline carries the signal instead. */
+        .oak-il { border-radius: 2px; }
+        .oak-diff-del .oak-il { background: rgba(207,34,46,0.13); box-shadow: inset 0 -0.15em 0 rgba(207,34,46,0.6); }
+        .oak-diff-ins .oak-il { background: rgba(26,127,55,0.16); box-shadow: inset 0 -0.15em 0 rgba(26,127,55,0.6); }
+        html.dark .oak-diff code { background: transparent !important; }
+        html.dark .oak-diff .hljs-addition, html.dark .oak-diff .hljs-deletion { background: transparent !important; }
+        html.dark .oak-diff .hljs-addition { color: #7ee787 !important; }
+        html.dark .oak-diff .hljs-deletion { color: #ff7b72 !important; }
+        html.dark .oak-diff-del .oak-il { background: rgba(248,81,73,0.28); box-shadow: inset 0 -0.15em 0 rgba(248,81,73,0.75); }
+        html.dark .oak-diff-ins .oak-il { background: rgba(63,185,80,0.24); box-shadow: inset 0 -0.15em 0 rgba(63,185,80,0.75); }
+
+        /* Marketing card hover */
+        .install-box { transition: border-color 0.2s ease; }
+        .install-box:hover { border-color: rgb(var(--oak-ink)); }
+
+        /* Blog-post-only typography override: more breathing room than the
+           generic markdown body used in chat / READMEs. */
+        .prose-blog { font-size: 1.0625rem; line-height: 1.8; color: rgb(var(--oak-ink)); }
+        .prose-blog p { margin: 1.1em 0; }
+        .prose-blog h2 { font-family: var(--oak-mono); font-weight: 600; font-size: 1.5em; line-height: 1.25; margin: 2.4em 0 0.8em; padding-bottom: 0; border-bottom: 0; letter-spacing: -0.02em; }
+        .prose-blog h3 { font-family: var(--oak-mono); font-weight: 600; font-size: 1.2em; line-height: 1.3; margin: 1.8em 0 0.6em; letter-spacing: -0.01em; }
+        .prose-blog ul, .prose-blog ol { margin: 1.1em 0; padding-left: 1.6em; }
+        .prose-blog li { margin: 0.55em 0; }
+        .prose-blog pre { margin: 1.4em 0; padding: 1.1em 1.2em; }
+        .prose-blog blockquote { margin: 1.4em 0; padding: 0.1em 0 0.1em 1.1em; border-left-color: rgb(var(--oak-moss)); color: rgb(var(--oak-ink-soft)); }
+        .prose-blog a { color: rgb(var(--oak-moss)); border-bottom: 1px solid rgba(63,107,58,0.25); text-decoration: none; }
+        .prose-blog a:hover { border-bottom-color: rgb(var(--oak-moss)); }
+
+        /* Markdown rendered content */
+        .markdown-body { color: #374151; line-height: 1.75; }
+        .markdown-body h1 { font-size: 1.75em; font-weight: 700; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.3em; margin: 0.5em 0 0.75em; color: #111827; }
+        .markdown-body > h1:first-child { margin-top: 0; }
+        .markdown-body h2 { font-size: 1.4em; font-weight: 600; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.3em; margin: 1.25em 0 0.6em; color: #111827; }
+        .markdown-body h3 { font-size: 1.15em; font-weight: 600; margin: 1em 0 0.5em; color: #111827; }
+        .markdown-body h4, .markdown-body h5, .markdown-body h6 { font-weight: 600; margin: 1em 0 0.5em; color: #111827; }
+        .markdown-body p { margin: 0.75em 0; }
+        .markdown-body a { color: rgb(var(--oak-moss)); text-decoration: underline; text-underline-offset: 2px; }
+        .markdown-body a:hover { text-decoration: underline; }
+        .markdown-body code { background: rgba(0,0,0,0.05); padding: 0.15em 0.35em; border-radius: 0; font-size: 0.9em; }
+        .markdown-body pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0; padding: 1em; overflow-x: auto; margin: 1em 0; }
+        .markdown-body pre code { background: transparent; padding: 0; font-size: 0.85em; }
+        .markdown-body ul, .markdown-body ol { padding-left: 1.5em; margin: 0.5em 0; }
+        .markdown-body li { margin: 0.25em 0; }
+        .markdown-body ul { list-style-type: disc; }
+        .markdown-body ol { list-style-type: decimal; }
+        .markdown-body blockquote { border-left: 3px solid #d1d5db; padding-left: 1em; color: #6b7280; margin: 0.75em 0; }
+        .markdown-body table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+        .markdown-body th, .markdown-body td { border: 1px solid #e5e7eb; padding: 0.5em 0.75em; text-align: left; }
+        /* Override the prose-wide `overflow-wrap: anywhere` (set above for
+           long URLs) inside table cells. `anywhere` collapses each column's
+           min-content width to a single character, so `width: 100%` in a
+           narrow pane squashes columns and breaks words mid-token ("Pat h").
+           `break-word` keeps min-content at the longest word, so columns size
+           to their content and the table scrolls via its `overflow-x: auto`
+           instead of squashing. */
+        .markdown-body th, .markdown-body td { overflow-wrap: break-word; }
+        .markdown-body th { background: rgba(0,0,0,0.03); font-weight: 600; }
+        .markdown-body hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.5em 0; }
+        .markdown-body img { max-width: 100%; border-radius: 0; }
+
+        /* Tighter spacing for markdown rendered inside chat bubbles. */
+        .chat-md.markdown-body { line-height: 1.5; }
+        .chat-md.markdown-body p { margin: 0.35em 0; }
+        .chat-md.markdown-body p:first-child { margin-top: 0; }
+        .chat-md.markdown-body p:last-child { margin-bottom: 0; }
+        .chat-md.markdown-body h1, .chat-md.markdown-body h2, .chat-md.markdown-body h3,
+        .chat-md.markdown-body h4, .chat-md.markdown-body h5, .chat-md.markdown-body h6 {
+            font-size: 1em; font-weight: 600; margin: 0.5em 0 0.25em; border: 0; padding: 0;
+        }
+        .chat-md.markdown-body ul, .chat-md.markdown-body ol { margin: 0.35em 0; }
+        .chat-md.markdown-body pre { margin: 0.5em 0; padding: 0.6em 0.8em; }
+        .chat-md.markdown-body code { font-size: 0.85em; }
+
+        /* Modal backdrop */
+        .modal-backdrop { background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); }
+
+        /* Fade in */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.2s ease-out; }
+
+        /* Repo split pane: full-height only on sm+. The `flex: 0 0` override
+           is load-bearing — markup carries `flex-1` (used at < 640px so the
+           pane fills the column) and Tailwind's `flex: 1 1 0%` otherwise
+           overrides the explicit `height`, letting tall sidebar content
+           push the body past the viewport. Pinning flex-basis keeps the
+           chrome locked to viewport so internal panes scroll instead of the
+           page.
+
+           The 3.5rem subtraction matches the marketing top `<nav>`'s h-14.
+           Logged-in users get no top nav (see `render_nav`), so the body
+           has no `<nav>` child and the chrome should fill the full viewport
+           — otherwise sidebars whose `border-r` runs the height of the
+           chrome would stop short of the bottom edge. `body:has(> nav)`
+           singles out the not-signed-in case and re-applies the subtraction. */
+        @media (min-width: 640px) {
+            .repo-pane {
+                flex: 0 0 100vh;
+                height: 100vh;
+                overflow: hidden;
+            }
+            body:has(> nav) .repo-pane {
+                flex: 0 0 calc(100vh - 3.5rem);
+                height: calc(100vh - 3.5rem);
+            }
+        }
+        /* Mobile: the page scrolls, not the panes. The chrome used to be
+           pinned to 100dvh with `overflow: hidden` here ("app-like"), but
+           that forced every pane to scroll inside small nested regions —
+           the file content and branch/commit detail became cramped inner
+           scrollers that fought touch scrolling. Instead the chrome grows
+           with its content (`flex-basis: auto` overrides the markup's
+           `flex-1`, whose 0% basis would otherwise keep the body at
+           viewport height and spill content past the background) and the
+           browser owns the single scrollbar. The inner `overflow-y-auto`
+           panes are inert at this width because no ancestor constrains
+           their height; short pages still fill the viewport via the
+           body's `min-h-screen` + flex-grow. */
+        @media (max-width: 639px) {
+            .repo-pane {
+                flex: 1 1 auto;
+            }
+        }
+
+        /* Clone-command + AI-prompt chips in the repo breadcrumb. The
+           `.copied` class is toggled by the chip's inline onclick for ~1.5s
+           after a successful clipboard write — flash a moss tint so the
+           click feels acknowledged. */
+        .oak-copy-chip.copied {
+            border-color: rgb(var(--oak-moss));
+            background-color: rgb(var(--oak-moss-pale));
+            color: rgb(var(--oak-moss));
+        }
+        .oak-copy-chip.copied .lbl,
+        .oak-copy-chip.copied svg {
+            color: rgb(var(--oak-moss));
+        }
+
+        /* Draggable sidebar resize handle. The aside it precedes uses
+           `flex-basis: var(--sidebar-w)` so JS can update one CSS var per
+           drag — no inline-style churn on the sidebar itself. The handle
+           is a 6px-wide hit zone that hovers / drags-blue to telegraph
+           the affordance; on touch it's invisible until the user grabs it.
+           Hidden on small screens — sidebars stack there. */
+        .sidebar-resizer {
+            display: none;
+            width: 6px;
+            margin-left: -3px;
+            margin-right: -3px;
+            cursor: col-resize;
+            background: transparent;
+            position: relative;
+            /* Sit above the diff pane's per-file `sticky top-0 z-10` filename
+               headers: the handle overlaps 3px into the diff column
+               (margin-right:-3px), so at z-index 5 those sticky headers painted
+               over the hover/drag highlight at the top of the column. */
+            z-index: 20;
+            flex-shrink: 0;
+            user-select: none;
+            transition: background-color 0.15s ease;
+        }
+        @media (min-width: 640px) {
+            .sidebar-resizer { display: block; }
+        }
+        .sidebar-resizer:hover,
+        .sidebar-resizer.is-dragging {
+            background: rgb(var(--oak-moss));
+            opacity: 0.4;
+        }
+        @media (min-width: 640px) {
+            .sidebar-resizable {
+                flex-basis: var(--sidebar-w, 18rem);
+                min-width: 200px;
+                max-width: 640px;
+                width: auto;
+            }
+        }
+        /* Per-surface default widths. A head-script placed AFTER this
+           `<style>` block reads localStorage and appends a `<style>` with
+           the user's saved width; because that append happens once this
+           block is already in `<head>`, the injected rule lands later in
+           source order and wins the cascade — no shift on first paint.
+           The drag handler then sets an inline style during drag, which
+           beats both. No `!important` anywhere — pure source-order
+           cascade so each layer can win over the previous. */
+        .sidebar-resizable:has(+ .sidebar-resizer[data-resize-key="oak.sidebar.repo-history-commits"]) { --sidebar-w: 420px; }
+        .sidebar-resizable:has(+ .sidebar-resizer[data-resize-key="oak.sidebar.repo-branch-files"]) { --sidebar-w: 22rem; }
+        .sidebar-resizable:has(+ .sidebar-resizer[data-resize-key="oak.sidebar.repo-commit-files"]) { --sidebar-w: 22rem; }
+        .sidebar-resizable:has(+ .sidebar-resizer[data-resize-key="oak.sidebar.organization"]) { --sidebar-w: 12rem; }
+        /* The Code view's embedded Branches board (leftmost pane). Wider than
+           the file-tree sidebars, so it gets a larger default and a raised
+           max-width. */
+        .sidebar-resizable:has(+ .sidebar-resizer[data-resize-key="oak.sidebar.repo-code-branches"]) { --sidebar-w: 48rem; max-width: 90rem; }
+        /* Legacy `/branches` width default (the standalone Review page now
+           redirects into the unified repo page; kept harmless for any cached
+           markup). The unified page's branches sidebar uses
+           `oak.sidebar.repo-code-branches` above. */
+        .sidebar-resizable:has(+ .sidebar-resizer[data-resize-key="oak.sidebar.repo-review"]) { --sidebar-w: 34rem; max-width: 80rem; }
+
+        /* ── Unified repo page: collapse / reopen the two sections ─────────
+           The branches sidebar and the code group can each be collapsed to
+           focus on the other. State lives in `data-{branches,files}-collapsed`
+           on `[data-code-root]` (REPO_SPLIT_SCRIPT, localStorage-persisted).
+           Desktop-only — on mobile the Reviews|Files strip owns switching. */
+        @media (min-width: 640px) {
+            [data-code-root][data-branches-collapsed] [data-pane="branches"],
+            [data-code-root][data-branches-collapsed] .sidebar-resizer[data-resize-key="oak.sidebar.repo-code-branches"] { display: none; }
+            [data-code-root][data-files-collapsed] [data-pane="code"],
+            [data-code-root][data-files-collapsed] .sidebar-resizer[data-resize-key="oak.sidebar.repo-code-branches"] { display: none; }
+            /* The surviving section fills the freed space. */
+            [data-code-root][data-files-collapsed] [data-pane="branches"].sidebar-resizable { flex: 1 1 auto; max-width: none; }
+            /* Reopen rails surface only while their section is collapsed. */
+            [data-code-root][data-branches-collapsed] [data-reopen="branches"],
+            [data-code-root][data-files-collapsed] [data-reopen="files"] { display: flex; }
+        }
+        /* Thin vertical reopen rail (hidden until a section is collapsed) and the
+           in-header collapse buttons (hidden on mobile — collapse is desktop-only). */
+        .repo-reopen-rail {
+            display: none; align-items: center; justify-content: center;
+            width: 1.5rem; flex-shrink: 0; cursor: pointer; border: 0;
+            border-right: 1px solid rgb(var(--oak-line));
+            color: rgb(var(--oak-ink-soft)); background: rgb(var(--oak-paper-2));
+            transition: color 0.12s ease, background-color 0.12s ease;
+        }
+        .repo-reopen-rail:hover { color: rgb(var(--oak-ink)); background: rgb(var(--oak-moss-pale)); }
+        .repo-reopen-rail-right { border-right: 0; border-left: 1px solid rgb(var(--oak-line)); }
+        .repo-collapse-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 1.5rem; height: 1.5rem; border-radius: 0; border: 0;
+            color: rgb(var(--oak-ink-soft)); background: transparent;
+            flex-shrink: 0; cursor: pointer;
+            transition: color 0.12s ease, background-color 0.12s ease;
+        }
+        .repo-collapse-btn:hover { color: rgb(var(--oak-ink)); background: rgb(var(--oak-paper-2)); }
+        @media (max-width: 639px) {
+            .repo-collapse-btn, .repo-reopen-rail { display: none !important; }
+        }
+
+        /* Branch-detail slide-over: covers the code group (`[data-pane="code"]`,
+           which is `position:relative`) when a branch is previewed, leaving the
+           code view mounted underneath so its open file / scroll survive. Driven
+           purely by `[data-branch-detail-open]` on the root (BRANCHES_VIEW_SCRIPT). */
+        .branch-detail-overlay {
+            position: absolute; inset: 0; z-index: 30;
+            display: flex; flex-direction: column; overflow: hidden;
+            background: rgb(var(--oak-paper));
+            transform: translateX(6%); opacity: 0; pointer-events: none;
+            transition: transform 0.18s ease, opacity 0.18s ease;
+        }
+        [data-code-root][data-branch-detail-open] .branch-detail-overlay {
+            transform: none; opacity: 1; pointer-events: auto;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .branch-detail-overlay { transition: none; transform: none; }
+        }
+        /* Mobile: the overlay can't be a slide-over — `position: absolute;
+           inset: 0` would size it to the (now content-height) code pane and
+           nest a scroller inside. Put it in normal flow and swap the code
+           view out underneath instead; the page scrolls through the whole
+           detail top to bottom. Losing the code view's scroll position on
+           close is the accepted trade. */
+        @media (max-width: 639px) {
+            .branch-detail-overlay {
+                position: static;
+                transform: none;
+                transition: none;
+                overflow: visible;
+                display: none;
+            }
+            [data-code-root][data-branch-detail-open] .branch-detail-overlay { display: flex; }
+            [data-code-root][data-branch-detail-open] [data-code-view] { display: none; }
+        }
+
+        /* Ideas board: foldable status sections, each a table of idea rows
+           (modeled on the Review tab) + drag-reorder + selection affordances.
+           Each section header is a fold toggle. */
+        .ideas-col.is-collapsed .ideas-list { display: none; }
+        .ideas-chevron { transition: transform 0.15s ease; }
+        .ideas-col.is-collapsed .ideas-chevron { transform: rotate(-90deg); }
+        .idea-row { transition: background-color 0.12s ease, opacity 0.12s ease; }
+        .idea-row + .idea-row > td { border-top: 1px solid rgb(var(--oak-line)); }
+        .idea-row[draggable="true"] { cursor: grab; }
+        .idea-row.is-dragging { opacity: 0.45; cursor: grabbing; }
+        .idea-row.is-selected { background: rgba(63,107,58,0.10); }
+        .idea-row.is-selected > td:first-child { box-shadow: inset 3px 0 0 rgb(var(--oak-moss)); }
+        [data-idea-rows].drag-over { background: rgba(63,107,58,0.04); }
+        /* Keep the markdown body compact inside a row (trim outer margins). */
+        .idea-body.markdown-body { font-size: 0.8125rem; }
+        .idea-body.markdown-body > :first-child { margin-top: 0; }
+        .idea-body.markdown-body > :last-child { margin-bottom: 0; }
+
+        /* Repo grid/list view — pre-paint state from localStorage. The
+           head-script below adds `.oak-initview-{org,home}-list` to <html>
+           when the saved view is "list", so the right surface shows on the
+           first paint instead of flashing grid → list. These selectors
+           (html.class + descendant attr) outrank the `.grid`/`.hidden`
+           utilities on the containers, so they win before any JS runs. The
+           per-page init removes the marker class once it has applied the
+           real class-based state, handing control back to the runtime
+           toggle (otherwise these rules would pin the initial view). */
+        html.oak-initview-org-list [data-org-repo-view="grid"] { display: none; }
+        html.oak-initview-org-list [data-org-repo-view="list"] { display: flex; }
+        html.oak-initview-home-list [data-home-repo-view="grid"] { display: none; }
+        html.oak-initview-home-list [data-home-repo-view="list"] { display: flex; }
+
+        body.sidebar-dragging {
+            cursor: col-resize !important;
+            user-select: none !important;
+        }
+        body.sidebar-dragging * {
+            cursor: col-resize !important;
+            user-select: none !important;
+        }
+
+        /* Code view: mobile Code/Branches tabs. The strip is `sm:hidden`; on
+           narrow viewports it toggles `data-mobile-tab` on `[data-code-root]`,
+           showing one pane group at a time. Desktop shows all panes
+           side-by-side and the strip is hidden, so these rules never apply. */
+        .code-mtab {
+            flex: 1; padding: 10px 12px; font-size: 13px; font-weight: 500;
+            color: rgb(var(--oak-ink-soft)); background: transparent;
+            border: 0; border-bottom: 2px solid transparent; cursor: pointer;
+        }
+        [data-code-root][data-mobile-tab="code"] .code-mtab[data-code-tab="code"],
+        [data-code-root][data-mobile-tab="branches"] .code-mtab[data-code-tab="branches"] {
+            color: rgb(var(--oak-ink));
+            border-bottom-color: rgb(var(--oak-moss));
+        }
+        @media (max-width: 639px) {
+            [data-code-root][data-mobile-tab="code"] [data-pane="branches"] { display: none; }
+            [data-code-root][data-mobile-tab="branches"] [data-pane="code"] { display: none; }
+            /* On the Branches tab the board is the whole screen: lift the 50vh
+               stacked-sidebar cap (.sidebar-resizable rule above) and let it
+               flow at natural height — the page is the scroll surface on
+               mobile, so no inner scroller here (`overflow: visible` also
+               overrides the markup's `overflow-hidden`, which would otherwise
+               clip once the cap is gone). */
+            [data-code-root][data-mobile-tab="branches"] [data-pane="branches"].sidebar-resizable {
+                max-height: none;
+                flex: 1 1 auto;
+                overflow: visible;
+            }
+        }
+        /* Tapping a branch row on mobile flips data-mobile-tab to "code" so the
+           branch detail (a code-group pane) comes forward — but the user is
+           still in the branches flow, so keep "Branches" lit rather than "Code".
+           Authored after the default tab-highlight rules above so it wins on
+           equal specificity. */
+        [data-code-root][data-branch-detail-open] .code-mtab[data-code-tab="code"] {
+            color: rgb(var(--oak-ink-soft));
+            border-bottom-color: transparent;
+        }
+        [data-code-root][data-branch-detail-open] .code-mtab[data-code-tab="branches"] {
+            color: rgb(var(--oak-ink));
+            border-bottom-color: rgb(var(--oak-moss));
+        }
+
+        /* ── History: full-width feed redesign ────────────────────────── */
+
+        .history-feed { display: flex; flex-direction: column; gap: 22px; }
+
+        .history-head { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+        .history-head-l { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .history-eyebrow {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: rgb(var(--oak-moss));
+            font-weight: 500;
+        }
+        .history-title {
+            font-family: var(--oak-mono);
+            font-weight: 600;
+            font-size: 28px;
+            letter-spacing: -0.015em;
+            line-height: 1.1;
+            margin: 0;
+            color: rgb(var(--oak-ink));
+            font-variation-settings: 'opsz' 60, 'SOFT' 60;
+        }
+        .history-head-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 2px;
+        }
+        .history-head-meta {
+            font-size: 12px;
+            color: rgb(var(--oak-ink-soft));
+        }
+        .history-head-spacer { flex: 1; }
+
+        /* Branch pill — moss-tinted, mono */
+        .branch-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgb(var(--oak-moss-pale));
+            color: rgb(var(--oak-ink));
+            padding: 4px 10px 4px 8px;
+            border-radius: 0;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-weight: 500;
+            border: 0;
+        }
+        .branch-pill .ico { color: rgb(var(--oak-moss)); }
+
+        /* Search */
+        .oak-search-wrap {
+            position: relative;
+            min-width: 280px;
+            flex: 0 1 480px;
+        }
+        .oak-search-ico {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: #9ca3af;
+            pointer-events: none;
+            display: inline-flex;
+        }
+        .oak-search-input {
+            width: 100%;
+            background: rgb(var(--oak-paper));
+            border: 1px solid rgb(var(--oak-line-strong));
+            border-radius: 0;
+            padding: 9px 14px 9px 36px;
+            font-size: 13px;
+            color: rgb(var(--oak-ink));
+            outline: 0;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .oak-search-input:focus { border-color: rgb(var(--oak-moss)); box-shadow: 0 0 0 1px rgb(var(--oak-moss)); }
+        .oak-search-input::placeholder { color: #9ca3af; }
+
+        /* Shared compact controls for repository and branch list surfaces. */
+        .oak-control-search {
+            display: block;
+            position: relative;
+            min-width: 240px;
+            flex: 1 1 320px;
+        }
+        /* `flex: 1 1 320px` is authored for a horizontal toolbar. In a stacked
+           (flex-col) container the 320px basis sizes the label's HEIGHT, leaving
+           the input at the top and the absolutely-positioned icon stranded at
+           its vertical center. Surfaces that stack the control on mobile opt out
+           of the row-oriented flex. */
+        .oak-control-search.is-stacked {
+            flex: 0 0 auto;
+            min-width: 0;
+        }
+        .oak-control-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgb(var(--oak-ink-soft));
+            pointer-events: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .oak-control-icon svg {
+            width: 15px;
+            height: 15px;
+        }
+        .oak-control-input,
+        .oak-control-select {
+            height: 36px;
+            background: rgb(var(--oak-paper));
+            border: 1px solid rgb(var(--oak-line-strong));
+            border-radius: 0;
+            color: rgb(var(--oak-ink));
+            font-family: var(--oak-mono);
+            font-size: 13px;
+            line-height: 1;
+            outline: 0;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+        .oak-control-input {
+            width: 100%;
+            padding: 0 12px 0 34px;
+        }
+        .oak-control-select {
+            flex: 0 0 auto;
+            min-width: 178px;
+            padding: 0 10px;
+        }
+        .oak-control-input::placeholder { color: rgb(var(--oak-ink-soft)); }
+        .oak-control-input:focus,
+        .oak-control-select:focus {
+            border-color: rgb(var(--oak-moss));
+            box-shadow: 0 0 0 1px rgb(var(--oak-moss));
+        }
+        .oak-view-toggle {
+            display: inline-flex;
+            align-items: center;
+            height: 36px;
+            background: rgb(var(--oak-paper));
+            border: 1px solid rgb(var(--oak-line-strong));
+            border-radius: 0;
+            padding: 2px;
+            gap: 1px;
+            flex-shrink: 0;
+        }
+        .oak-view-btn {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: rgb(var(--oak-ink-soft));
+            cursor: pointer;
+            transition: background 0.1s ease, color 0.1s ease, box-shadow 0.1s ease;
+        }
+        .oak-view-btn svg {
+            width: 15px;
+            height: 15px;
+        }
+        .oak-view-btn:hover {
+            color: rgb(var(--oak-ink));
+            background: rgba(0,0,0,0.025);
+        }
+        html.dark .oak-view-btn:hover { background: rgba(255,255,255,0.035); }
+        .oak-view-btn:focus-visible {
+            outline: 2px solid rgb(var(--oak-moss));
+            outline-offset: 2px;
+        }
+        .oak-view-btn.is-active {
+            background: rgb(var(--oak-moss-pale));
+            color: rgb(var(--oak-moss));
+            box-shadow: inset 0 0 0 1px rgb(var(--oak-moss-soft));
+        }
+
+        /* Filter chips + segmented source filter */
+        .filterbar {
+            display: flex; align-items: center; gap: 8px;
+            flex-wrap: wrap;
+        }
+        .oak-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgb(var(--oak-paper));
+            border: 1px solid rgb(var(--oak-line-strong));
+            border-radius: 0;
+            padding: 5px 11px;
+            font-size: 12px;
+            color: rgb(var(--oak-ink));
+            cursor: pointer;
+            transition: background 0.1s ease, border-color 0.1s ease;
+            line-height: 1.2;
+        }
+        .oak-chip:hover { background: rgba(0,0,0,0.025); }
+        html.dark .oak-chip:hover { background: rgba(255,255,255,0.035); }
+        .oak-chip .chip-key { color: rgb(var(--oak-ink-soft)); }
+        .oak-chip .chip-val { font-weight: 500; }
+        .oak-chip.is-active { background: rgb(var(--oak-moss-pale)); border-color: rgb(var(--oak-moss-soft)); }
+
+        .source-seg {
+            display: inline-flex;
+            gap: 2px;
+            background: rgb(var(--oak-paper-2));
+            border: 1px solid rgb(var(--oak-line));
+            border-radius: 0;
+            padding: 2px;
+        }
+        .source-seg-btn {
+            border: 0;
+            background: transparent;
+            color: rgb(var(--oak-ink-soft));
+            padding: 4px 12px;
+            border-radius: 0;
+            font-size: 12px;
+            font-weight: 500;
+            transition: color 0.1s ease, background 0.1s ease;
+            display: inline-flex; align-items: center; gap: 5px;
+            cursor: pointer;
+        }
+        .source-seg-btn:hover { color: rgb(var(--oak-ink)); }
+        .source-seg-btn.is-active { background: rgb(var(--oak-paper)); color: rgb(var(--oak-ink)); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+        .source-seg-btn .count { font-size: 10px; color: #9ca3af; }
+        .source-seg-btn.is-active .count { color: rgb(var(--oak-moss)); }
+
+        /* Day group */
+        .daygroup { display: flex; flex-direction: column; gap: 0; }
+        .day-h {
+            display: flex; align-items: baseline; gap: 12px;
+            padding: 18px 4px 10px;
+            position: sticky;
+            top: 0;
+            background: linear-gradient(to bottom, rgb(var(--oak-paper)) 70%, rgba(247,245,239,0));
+            z-index: 5;
+        }
+        html.dark .day-h {
+            background: linear-gradient(to bottom, rgb(var(--oak-paper)) 70%, rgba(15,15,13,0));
+        }
+        .day-h-label {
+            font-family: var(--oak-mono);
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: -0.005em;
+            color: rgb(var(--oak-ink));
+            font-variation-settings: 'opsz' 60, 'SOFT' 60;
+        }
+        .day-h-meta {
+            font-size: 11px;
+            color: rgb(var(--oak-ink-soft));
+        }
+        .day-h-rule {
+            flex: 1;
+            height: 1px;
+            background: rgb(var(--oak-line));
+            align-self: center;
+        }
+
+        /* Commit feed */
+        .feed-list {
+            display: flex; flex-direction: column;
+            border-top: 1px solid rgb(var(--oak-line));
+        }
+        .feed-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: 16px 1fr auto;
+            gap: 14px;
+            padding: 14px 16px 14px 14px;
+            border-bottom: 1px solid rgb(var(--oak-line));
+            cursor: pointer;
+            transition: background-color 0.1s ease;
+            align-items: center;
+            color: inherit;
+            text-decoration: none;
+        }
+        .feed-row:hover { background: rgba(0,0,0,0.018); }
+        html.dark .feed-row:hover { background: rgba(255,255,255,0.025); }
+        .feed-row.is-agent { background: rgba(63,107,58,0.025); }
+        .feed-row.is-agent:hover { background: rgba(63,107,58,0.05); }
+
+        .feed-rail {
+            width: 16px;
+            height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            color: #9ca3af;
+        }
+        .feed-rail .node {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: rgb(var(--oak-paper));
+            border: 1.5px solid #9ca3af;
+        }
+        .feed-row.is-agent .feed-rail .node {
+            border-color: rgb(var(--oak-moss));
+            background: rgb(var(--oak-moss));
+        }
+
+        .feed-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .feed-title-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .feed-title {
+            font-size: 14px;
+            color: rgb(var(--oak-ink));
+            font-weight: 500;
+            line-height: 1.35;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            min-width: 0;
+        }
+        .feed-row:hover .feed-title { color: rgb(var(--oak-moss)); }
+
+        .feed-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgb(var(--oak-ink-soft)); min-width: 0; flex-wrap: wrap; }
+        .feed-meta .dot { width: 2px; height: 2px; border-radius: 50%; background: #9ca3af; flex-shrink: 0; }
+        .feed-meta .author { display: inline-flex; align-items: center; gap: 5px; }
+        .feed-meta .sha {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 11px;
+            color: rgb(var(--oak-ink-soft));
+            background: rgba(0,0,0,0.04);
+            padding: 1px 6px;
+            border-radius: 0;
+        }
+        html.dark .feed-meta .sha { background: rgba(255,255,255,0.05); }
+        .feed-row:hover .feed-meta .sha { background: rgba(0,0,0,0.06); }
+
+        .feed-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; white-space: nowrap; }
+        .feed-stat {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 11px;
+            color: rgb(var(--oak-ink-soft));
+            display: inline-flex; align-items: center; gap: 6px;
+            white-space: nowrap;
+        }
+        .feed-stat .plus { color: rgb(var(--oak-moss)); }
+        .feed-stat .minus { color: rgb(var(--oak-vermilion)); }
+        .feed-stat .files-count { color: rgb(var(--oak-ink)); }
+
+        /* Agent tag and CI pip — reusable accents */
+        .agent-tag {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: rgb(var(--oak-moss-pale));
+            color: rgb(var(--oak-moss));
+            padding: 2px 7px 2px 6px;
+            border-radius: 0;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.3;
+            flex-shrink: 0;
+            letter-spacing: 0.02em;
+        }
+        .ci-pip {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: inline-block;
+        }
+        .ci-pip-ok { background: rgb(var(--oak-moss)); }
+        .ci-pip-fail { background: rgb(var(--oak-vermilion)); }
+        .ci-pip-run { background: #d4a849; box-shadow: 0 0 0 2px rgba(212,168,73,0.18); }
+        .ci-pip-none { background: rgb(var(--oak-line-strong)); }
+
+        /* ── Commit-detail page redesign ──────────────────────────── */
+
+        .commitview-back {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12px;
+            color: rgb(var(--oak-ink-soft));
+            cursor: pointer;
+            background: transparent; border: 0; padding: 0;
+            transition: color 0.1s ease;
+            align-self: flex-start;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        .commitview-back:hover { color: rgb(var(--oak-moss)); }
+
+        .commitview-revert {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12px;
+            color: rgb(var(--oak-vermilion));
+            cursor: pointer;
+            background: transparent;
+            border: 1px solid rgb(var(--oak-line-strong));
+            border-radius: 0;
+            padding: 5px 11px;
+            transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease;
+            white-space: nowrap;
+        }
+        .commitview-revert:hover {
+            border-color: rgb(var(--oak-vermilion));
+            background: rgba(195, 74, 41, 0.06);
+        }
+        .commitview-revert svg { width: 14px; height: 14px; }
+        .commitview-revert-form { display: inline-flex; margin: 0; }
+
+        .commitview-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px 22px;
+            padding: 14px 18px;
+            background: rgb(var(--oak-paper));
+            border: 1px solid rgb(var(--oak-line));
+            border-radius: 0;
+            align-items: center;
+        }
+        .meta-item { display: flex; flex-direction: column; gap: 3px; }
+        .meta-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: rgb(var(--oak-ink-soft));
+        }
+        .meta-val {
+            font-size: 13px;
+            color: rgb(var(--oak-ink));
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .meta-val .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; }
+
+        .stats-row {
+            display: inline-flex; align-items: center; gap: 14px;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 12px;
+        }
+        .stats-row .files-count { color: rgb(var(--oak-ink)); font-weight: 500; }
+        .stats-row .added { color: rgb(var(--oak-moss)); }
+        .stats-row .modified { color: #8a6614; }
+        html.dark .stats-row .modified { color: #d4a437; }
+        .stats-row .deleted { color: rgb(var(--oak-vermilion)); }
+
+        .empty-card {
+            padding: 18px;
+            text-align: center;
+            color: rgb(var(--oak-ink-soft));
+            font-size: 12px;
+            border: 1px dashed rgb(var(--oak-line-strong));
+            border-radius: 0;
+            background: transparent;
+        }
+
+        /* ---- Dark mode ---- */
+        html.dark { color-scheme: dark; }
+        html.dark body { background: rgb(var(--oak-paper)); color: rgb(var(--oak-ink)); }
+        html.dark .bg-white { background: rgb(var(--oak-paper)) !important; }
+        html.dark .bg-white\/90 { background:rgba(15,15,13,0.9) !important; }
+        html.dark .bg-white\/95 { background:rgba(15,15,13,0.95) !important; }
+        html.dark .bg-oak-paper\/90 { background:rgba(15,15,13,0.9) !important; }
+        html.dark .bg-oak-paper\/95 { background:rgba(15,15,13,0.95) !important; }
+        html.dark .bg-oak-ink { background:#2f2e29 !important; }
+        /* .term-surface keeps its light-on-dark terminal colours here; it only
+           lifts off the pure-black page so the block still reads as a panel. */
+        html.dark .term-surface { background-color:#1c1b18; border:1px solid #34322c; }
+        /* Solid moss-accent buttons hardcode white text. --oak-moss is near-white
+           in dark (for text/link use), so force the *background* utilities to
+           charcoal here, mirroring bg-oak-ink, to keep the label readable. */
+        html.dark .bg-oak-moss { background:#2f2e29 !important; }
+        html.dark .hover\:bg-oak-moss\/90:hover { background:#3a3934 !important; }
+        html.dark .bg-oak-moss\/30 { background:rgba(255,255,255,0.12) !important; }
+        html.dark .bg-gray-50, html.dark .bg-gray-100 { background: rgb(var(--oak-paper-2)) !important; }
+        html.dark .bg-gray-50\/50, html.dark .bg-gray-100\/50 { background:rgba(22,22,26,0.5) !important; }
+        html.dark .bg-gray-50\/80, html.dark .bg-gray-100\/80 { background:rgba(22,22,26,0.8) !important; }
+        html.dark .text-gray-900 { color:#e7e5e4 !important; }
+        html.dark .text-gray-800 { color:#d6d3d1 !important; }
+        html.dark .text-gray-700, html.dark .text-gray-600 { color:#a8a29e !important; }
+        html.dark .text-gray-500 { color:#78716c !important; }
+        html.dark .text-gray-400, html.dark .text-gray-300 { color:#57534e !important; }
+        html.dark .border-gray-100 { border-color:#292524 !important; }
+        html.dark .border-gray-200 { border-color:#44403c !important; }
+        html.dark .border-b-2.border-gray-200 { border-color:#44403c !important; }
+        /* Brand-action greens → solar orange. Tailwind green-600/700 are used
+           across the app for interactive affordances (links, primary buttons,
+           focus rings); remap them to the brand accent so every page tracks the
+           theme. Success/status greens stay green on purpose: green-50/100
+           backgrounds, green-500 progress bars, green-800/900 success text, and
+           the hljs diff-addition palette are all left untouched. Authored
+           unlayered so they win over the Tailwind `utilities` layer. */
+        .text-green-700, .text-green-600 { color: rgb(var(--oak-moss)); }
+        .bg-green-600, .bg-green-700 { background-color: rgb(var(--oak-moss)); }
+        .hover\:bg-green-700:hover, .hover\:bg-green-500:hover { background-color: rgb(var(--oak-moss-soft)); }
+        .hover\:text-green-700:hover, .hover\:text-green-600:hover { color: rgb(var(--oak-moss-soft)); }
+        .border-green-500, .focus\:border-green-500:focus { border-color: rgb(var(--oak-moss)); }
+        .ring-green-500 { --tw-ring-color: rgb(var(--oak-moss)); }
+        html.dark .bg-green-50 { background:rgba(45,138,78,0.1) !important; }
+        html.dark .bg-green-100 { background:rgba(45,138,78,0.15) !important; }
+        html.dark .text-green-700, html.dark .text-green-600 { color:rgb(var(--oak-moss)) !important; }
+        html.dark .text-green-800 { color:#86efac !important; }
+        html.dark .text-green-500 { color:#4ade80 !important; }
+        html.dark .border-green-200, html.dark .border-green-300 { border-color:rgba(74,222,128,0.2) !important; }
+        html.dark .border-green-500 { border-color:rgb(var(--oak-moss)) !important; }
+        html.dark .border-2.border-green-500 { border-color:rgb(var(--oak-moss)) !important; }
+        html.dark .bg-green-600, html.dark .bg-green-700 { background:#2f2e29 !important; }
+        html.dark .hover\:bg-green-700:hover { background:#3a3934 !important; }
+        html.dark .hover\:bg-green-500:hover { background:#3a3934 !important; }
+        html.dark .hover\:bg-gray-200:hover { background:#44403c !important; }
+        html.dark .hover\:bg-gray-50:hover, html.dark .hover\:bg-gray-100:hover { background:#292524 !important; }
+        html.dark .hover\:text-gray-900:hover { color:#e7e5e4 !important; }
+        html.dark .hover\:text-gray-700:hover, html.dark .hover\:text-gray-600:hover { color:#a8a29e !important; }
+        html.dark .hover\:text-green-900:hover, html.dark .hover\:text-green-600:hover, html.dark .hover\:text-green-500:hover { color:#f5f5f5 !important; }
+        html.dark .hover\:border-green-300:hover { border-color:rgba(74,222,128,0.3) !important; }
+        html.dark .hover\:bg-green-50\/50:hover { background:rgba(45,138,78,0.08) !important; }
+        html.dark .bg-red-50 { background:rgba(127,29,29,0.16) !important; }
+        html.dark .bg-red-100 { background:rgba(127,29,29,0.24) !important; }
+        html.dark .hover\:bg-red-50:hover { background:rgba(127,29,29,0.20) !important; }
+        html.dark .hover\:bg-red-100\/60:hover { background:rgba(127,29,29,0.28) !important; }
+        html.dark .text-red-500, html.dark .text-red-600, html.dark .text-red-700 { color:#f87171 !important; }
+        html.dark .bg-red-50 p { color:rgba(252,165,165,0.86) !important; }
+        html.dark .text-red-800, html.dark .text-red-900 { color:#fca5a5 !important; }
+        html.dark .border-red-200, html.dark .border-red-300 { border-color:rgba(248,113,113,0.34) !important; }
+        html.dark .border-red-800\/50 { border-color:rgba(248,113,113,0.34) !important; }
+        html.dark .bg-blue-50 { background:rgba(30,64,175,0.18) !important; }
+        html.dark .border-blue-100 { border-color:rgba(96,165,250,0.24) !important; }
+        html.dark .text-blue-600 { color:#93c5fd !important; }
+        html.dark .text-amber-600 { color:#fbbf24 !important; }
+        html.dark .bg-yellow-100 { background:rgba(250,204,21,0.1) !important; }
+        html.dark .text-yellow-700 { color:#fde047 !important; }
+        html.dark .border-yellow-300 { border-color:rgba(250,204,21,0.2) !important; }
+        html.dark .shadow-md { box-shadow:0 4px 6px -1px rgba(0,0,0,0.3) !important; }
+        html.dark code { background:rgba(255,255,255,0.06) !important; color:#d6d3d1; }
+        html.dark pre { background:#0c0a09 !important; border-color:#292524 !important; }
+        html.dark pre code { background:transparent !important; }
+        html.dark tbody.font-mono pre { background:transparent !important; border-color:transparent !important; }
+        html.dark table th { background:#292524 !important; }
+        html.dark .install-box:hover { border-color:rgba(255,255,255,0.4) !important; }
+        html.dark .tree-404 { color:#a0a0a0 !important; }
+        html.dark .leaf { color:#f5f5f5 !important; }
+        html.dark img { opacity:0.92; }
+        html.dark .tree-entry:hover { background-color: rgba(255,255,255,0.04); }
+        html.dark .tree-entry.active { background-color: rgba(255,255,255,0.07); border-right-color: rgb(var(--oak-moss)); }
+        html.dark .tree-entry:focus-visible:not(.active) { background-color: rgba(255,255,255,0.04); }
+        html.dark .markdown-body { color: #d6d3d1; }
+        html.dark .markdown-body h1, html.dark .markdown-body h2, html.dark .markdown-body h3,
+        html.dark .markdown-body h4, html.dark .markdown-body h5, html.dark .markdown-body h6 { color: #e7e5e4; }
+        html.dark .markdown-body h1, html.dark .markdown-body h2 { border-bottom-color: #44403c; }
+        html.dark .markdown-body a { color: rgb(var(--oak-moss)); }
+        html.dark .markdown-body blockquote { border-left-color: #57534e; color: #a8a29e; }
+        html.dark .markdown-body th, html.dark .markdown-body td { border-color: #44403c; }
+        html.dark .markdown-body th { background: rgba(255,255,255,0.03); }
+        html.dark .markdown-body hr { border-top-color: #44403c; }
+        html.dark .hljs { color: #d6d3d1 !important; }
+        /* highlight.js ships the *light* github.min.css; in dark mode its token
+           colors (dark navy strings, dark-blue sections, …) sink into the
+           near-black code background and fail contrast. Repaint every token with
+           the github-dark palette — every color here clears 4.5:1 on
+           rgb(var(--oak-paper)), with .hljs-section lifted to a brighter blue so
+           even bold section headers (e.g. TOML `[dependencies]`) pass. */
+        html.dark .hljs-doctag, html.dark .hljs-keyword, html.dark .hljs-meta .hljs-keyword,
+        html.dark .hljs-template-tag, html.dark .hljs-template-variable, html.dark .hljs-type,
+        html.dark .hljs-variable.language_ { color: #ff7b72 !important; }
+        html.dark .hljs-title, html.dark .hljs-title.class_, html.dark .hljs-title.class_.inherited__,
+        html.dark .hljs-title.function_ { color: #d2a8ff !important; }
+        html.dark .hljs-attr, html.dark .hljs-attribute, html.dark .hljs-literal,
+        html.dark .hljs-meta, html.dark .hljs-number, html.dark .hljs-operator,
+        html.dark .hljs-variable, html.dark .hljs-selector-attr, html.dark .hljs-selector-class,
+        html.dark .hljs-selector-id { color: #79c0ff !important; }
+        html.dark .hljs-regexp, html.dark .hljs-string, html.dark .hljs-meta .hljs-string { color: #a5d6ff !important; }
+        html.dark .hljs-built_in, html.dark .hljs-symbol { color: #ffa657 !important; }
+        html.dark .hljs-comment, html.dark .hljs-code, html.dark .hljs-formula { color: #9aa4ae !important; }
+        html.dark .hljs-name, html.dark .hljs-quote, html.dark .hljs-selector-tag,
+        html.dark .hljs-selector-pseudo { color: #7ee787 !important; }
+        html.dark .hljs-subst { color: #d6d3d1 !important; }
+        html.dark .hljs-section { color: #58a6ff !important; font-weight: 600; }
+        html.dark .hljs-bullet { color: #f2cc60 !important; }
+        html.dark .hljs-emphasis { color: #d6d3d1 !important; font-style: italic; }
+        html.dark .hljs-strong { color: #d6d3d1 !important; font-weight: 600; }
+        html.dark .hljs-addition { color: #aff5b4 !important; background-color: #033a16 !important; }
+        html.dark .hljs-deletion { color: #ffdcd7 !important; background-color: #67060c !important; }
+        html.dark .modal-backdrop { background: rgba(0,0,0,0.5); }
+
+        /* ─── Marketing design system (hp-*) ─────────────────────────────────
+           Tokens + reusable components shared by the homepage and every other
+           marketing page (about, pricing, privacy, terms, help, releases, 404,
+           and the docs/blog markdown shell). Pages opt in by setting the
+           `oak-marketing` body class (asserts the Inter base font);
+           the `.hp-*` classes are usable individually anywhere. */
+        :root {
+            --hp-paper:        rgb(255 255 255);
+            --hp-paper-2:      rgb(245 245 245);
+            --hp-paper-3:      rgb(235 235 235);
+            --hp-ink:          rgb(10 10 10);
+            --hp-ink-soft:     rgb(74 74 74);
+            --hp-ink-mute:     rgb(120 120 120);
+            --hp-line:         rgb(218 218 218);
+            --hp-line-strong:  rgb(184 184 184);
+            --hp-term-bg:      #070707;
+            --hp-term-bg-2:    #0e0e0f;
+            --hp-term-bg-3:    #161618;
+            --hp-term-line:    #242427;
+            --hp-term-line-2:  #35353b;
+            --hp-term-ink:     #ece8dc;
+            --hp-term-ink-soft:#948f82;
+            --hp-term-ink-mute:#5c5a52;
+            /* Solar-orange primary + electric-teal secondary, with violet / gold
+               / red used sparingly. The bright `*-2` ramps ride dark surfaces
+               (hero, terminal); the deep base ramps are tuned to clear AA on the
+               white paper sections. */
+            /* Redesign: marketing accent is ink, not orange. --hp-moss drives
+               links/markers/sigils on paper → set to near-black; --hp-moss-2 is
+               only ever shown on the always-dark terminal/code chrome → light
+               grey so it stays legible there in both colour modes. Decorative
+               cyan/magenta/amber are kept defined but used sparingly. */
+            --hp-moss:         oklch(0.20 0 0);       /* ink — links / markers */
+            --hp-moss-2:       oklch(0.85 0 0);       /* light grey — terminal prompt */
+            --hp-cyan:         oklch(0.82 0.13 185);  /* electric teal — on dark */
+            --hp-cyan-2:       oklch(0.52 0.10 190);  /* teal ink — AA on white */
+            --hp-magenta:      oklch(0.70 0.17 292);  /* electric violet */
+            --hp-magenta-2:    oklch(0.55 0.20 292);  /* violet ink */
+            --hp-amber:        oklch(0.82 0.15 75);   /* gold */
+            --hp-amber-2:      oklch(0.62 0.13 68);   /* gold ink */
+            --hp-vermilion:    oklch(0.58 0.21 27);   /* red */
+            --hp-radius: 0px;
+            --hp-shadow: 0 1px 0 rgb(0 0 0/.03), 0 10px 30px -18px rgb(0 0 0/.16);
+        }
+        html.dark {
+            --hp-paper:        rgb(0 0 0);
+            --hp-paper-2:      rgb(20 20 20);
+            --hp-paper-3:      rgb(28 28 28);
+            --hp-ink:          rgb(245 245 245);
+            --hp-ink-soft:     rgb(160 160 160);
+            --hp-ink-mute:     rgb(120 120 120);
+            --hp-line:         rgb(64 64 64);
+            --hp-line-strong:  rgb(90 90 90);
+            --hp-moss:         oklch(0.95 0 0);       /* ink — near-white links/markers on black */
+            --hp-moss-2:       oklch(0.85 0 0);       /* light grey — terminal prompt */
+            --hp-cyan-2:       oklch(0.80 0.13 185);  /* teal ink can run bright on black */
+            --hp-magenta-2:    oklch(0.72 0.16 292);
+            --hp-amber-2:      oklch(0.80 0.14 72);
+        }
+
+        /* Marketing-page wrapper. Each page wraps its content in
+           `<main class="oak-marketing">` (or any container with this class).
+           Inter base type for marketing body copy; `.hp-term`,
+           `.hp-code`, and inline `code` opt back into monospace for the
+           terminal/code visuals. */
+        .oak-marketing {
+            font-family: var(--oak-mono);
+            font-size: 14.5px;
+            line-height: 1.55;
+            color: var(--hp-ink);
+        }
+        .oak-marketing a { text-decoration: none; }
+        main.oak-marketing { flex: 1; }
+
+        /* ── layout ─────────────────────────────────────────────────────── */
+        .hp-wrap { max-width: 1200px; margin: 0 auto; padding: 0 28px; }
+        .hp-wrap-narrow { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+        @media (max-width: 640px) {
+            .hp-wrap, .hp-wrap-narrow { padding: 0 16px; }
+        }
+
+        /* ── content sections ────────────────────────────────────────────── */
+        .hp-s { padding: 72px 0 64px; border-bottom: 1px solid var(--hp-line); }
+        .hp-s:last-child { border-bottom: 0; }
+        .hp-s-tight { padding: 48px 0; }
+        .hp-eyebrow {
+            display: inline-flex; align-items: center; gap: 10px;
+            color: var(--hp-ink-mute); font-size: 11.5px;
+            text-transform: lowercase; letter-spacing: 0.04em; margin-bottom: 14px;
+        }
+        .hp-eyebrow::before {
+            content: ''; display: inline-block; width: 22px; height: 1px;
+            background: var(--hp-line-strong);
+        }
+        .hp-marker { color: var(--hp-moss); font-weight: 600; }
+        .hp-eyebrow-cy .hp-marker { color: var(--hp-cyan-2); }
+        .hp-eyebrow-mg .hp-marker { color: var(--hp-magenta-2); }
+        .hp-eyebrow-am .hp-marker { color: var(--hp-amber-2); }
+
+        /* ── typography (marketing) ─────────────────────────────────────── */
+        .hp-h1 {
+            font-family: var(--oak-mono);
+            font-size: clamp(32px, 4.2vw, 50px);
+            line-height: 1.08; font-weight: 600; letter-spacing: -0.025em;
+            color: var(--hp-ink); margin: 0 0 18px;
+        }
+        .hp-h2 {
+            font-family: var(--oak-mono);
+            font-size: clamp(24px, 3vw, 34px); line-height: 1.14;
+            font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px;
+            color: var(--hp-ink);
+        }
+        .hp-h3 {
+            font-family: var(--oak-mono);
+            font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
+            color: var(--hp-ink); margin: 0 0 8px;
+        }
+        .hp-a-moss { color: var(--hp-moss); }
+        .hp-a-cy   { color: var(--hp-cyan-2); }
+        .hp-a-mg   { color: var(--hp-magenta-2); }
+        .hp-a-am   { color: var(--hp-amber-2); }
+        .hp-a-vm   { color: var(--hp-vermilion); }
+        .hp-lede {
+            color: var(--hp-ink-soft); font-size: 15.5px; line-height: 1.7;
+            max-width: 60ch; margin: 0 0 28px;
+        }
+        .hp-sub {
+            color: var(--hp-ink-soft); max-width: 64ch;
+            font-size: 14.5px; line-height: 1.7; margin: 0 0 32px;
+        }
+        .oak-marketing code,
+        .hp-sub code, .hp-lede code, .hp-prose code {
+            background: var(--hp-paper-2); padding: 1px 6px; border-radius: 0;
+            font-size: 0.92em; font-family: 'JetBrains Mono', monospace;
+            color: var(--hp-ink);
+        }
+        .hp-prose { color: var(--hp-ink-soft); font-size: 14px; line-height: 1.7; max-width: 70ch; }
+        .hp-prose > * + * { margin-top: 14px; }
+        .hp-prose strong, .hp-prose b { color: var(--hp-ink); font-weight: 600; }
+        .hp-prose a { color: var(--hp-moss); border-bottom: 1px solid color-mix(in oklch, var(--hp-moss) 40%, transparent); }
+        .hp-prose a:hover { border-bottom-color: var(--hp-moss); }
+        .hp-prose ul, .hp-prose ol { padding-left: 22px; }
+        .hp-prose ul li, .hp-prose ol li { margin-top: 4px; }
+        .hp-prose ul { list-style: none; padding-left: 0; }
+        .hp-prose ul > li { position: relative; padding-left: 18px; }
+        .hp-prose ul > li::before {
+            content: '›'; position: absolute; left: 4px; top: 0;
+            color: var(--hp-moss); font-weight: 600;
+        }
+        .hp-prose h2 {
+            font-family: var(--oak-mono);
+            font-size: 18px; font-weight: 600; color: var(--hp-ink);
+            margin-top: 28px; margin-bottom: 6px; letter-spacing: -0.01em;
+        }
+        .hp-prose h3 {
+            font-family: var(--oak-mono);
+            font-size: 14.5px; font-weight: 600; color: var(--hp-ink);
+            margin-top: 20px; margin-bottom: 4px;
+        }
+
+        /* ── CTA / buttons (marketing) ──────────────────────────────────── */
+        .hp-cta-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .hp-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 9px 16px; border-radius: var(--hp-radius);
+            font-size: 13px; font-weight: 500;
+            border: 1px solid transparent;
+            transition: transform 0.06s, background 0.12s, border-color 0.12s, color 0.12s;
+            cursor: pointer; text-decoration: none;
+        }
+        .hp-btn:active { transform: translateY(1px); }
+        .hp-btn-arrow { width: 14px; height: 14px; transition: transform 0.12s; }
+        .hp-btn:hover .hp-btn-arrow { transform: translateX(2px); }
+        .hp-btn-primary {
+            background: var(--hp-ink); color: var(--hp-paper); font-weight: 600;
+            border-color: var(--hp-ink);
+        }
+        .hp-btn-primary:hover {
+            background: color-mix(in oklch, var(--hp-ink) 86%, var(--hp-paper));
+            color: var(--hp-paper);
+        }
+        .hp-btn-ink {
+            background: var(--hp-ink); color: var(--hp-paper);
+            border-color: var(--hp-ink);
+        }
+        .hp-btn-ink:hover { background: color-mix(in oklch, var(--hp-ink) 86%, var(--hp-paper)); }
+        .hp-btn-outline {
+            background: transparent; color: var(--hp-ink);
+            border-color: var(--hp-line-strong);
+        }
+        .hp-btn-outline:hover { background: var(--hp-paper-2); }
+        .hp-btn-ghost {
+            background: transparent; color: var(--hp-ink-soft);
+            border-color: transparent;
+        }
+        .hp-btn-ghost:hover { color: var(--hp-ink); background: var(--hp-paper-2); }
+        .hp-kbd {
+            display: inline-block; padding: 1px 6px;
+            background: var(--hp-paper-2); border: 1px solid var(--hp-line-strong);
+            border-radius: 0; color: var(--hp-ink);
+            font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+        }
+        .hp-tag {
+            display: inline-block; padding: 2px 8px; border-radius: 0;
+            background: var(--hp-paper-2); color: var(--hp-ink-soft);
+            font-size: 11px;
+            border: 1px solid var(--hp-line);
+        }
+        .hp-tag-moss { color: var(--hp-moss); border-color: color-mix(in oklch, var(--hp-moss) 30%, var(--hp-line)); background: color-mix(in oklch, var(--hp-moss) 6%, var(--hp-paper)); }
+        .hp-tag-cy   { color: var(--hp-cyan-2); border-color: color-mix(in oklch, var(--hp-cyan) 30%, var(--hp-line)); background: color-mix(in oklch, var(--hp-cyan) 6%, var(--hp-paper)); }
+        .hp-tag-mg   { color: var(--hp-magenta-2); border-color: color-mix(in oklch, var(--hp-magenta) 30%, var(--hp-line)); background: color-mix(in oklch, var(--hp-magenta) 6%, var(--hp-paper)); }
+        .hp-tag-am   { color: var(--hp-amber-2); border-color: color-mix(in oklch, var(--hp-amber) 30%, var(--hp-line)); background: color-mix(in oklch, var(--hp-amber) 8%, var(--hp-paper)); }
+
+        /* ── feature cards ───────────────────────────────────────────────── */
+        .hp-triptych { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        @media (max-width: 880px) { .hp-triptych { grid-template-columns: 1fr; } }
+        .hp-pair { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        @media (max-width: 720px) { .hp-pair { grid-template-columns: 1fr; } }
+        .hp-card {
+            border: 1px solid var(--hp-line); background: var(--hp-paper);
+            border-radius: var(--hp-radius); overflow: hidden;
+            transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+        }
+        .hp-card:hover { transform: translateY(-2px); box-shadow: var(--hp-shadow); border-color: var(--hp-line-strong); }
+        .hp-card-static:hover { transform: none; box-shadow: none; border-color: var(--hp-line); }
+        .hp-card-hd {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 11px 16px; border-bottom: 1px solid var(--hp-line);
+            background: var(--hp-paper-2); font-size: 11.5px; color: var(--hp-ink-mute);
+        }
+        .hp-card-lft { display: flex; align-items: center; gap: 8px; }
+        .hp-sigil { font-weight: 600; }
+        .hp-c-moss .hp-sigil, .hp-c-moss .hp-pk { color: var(--hp-moss); }
+        .hp-c-cyan .hp-sigil, .hp-c-cyan .hp-pk { color: var(--hp-cyan-2); }
+        .hp-c-magenta .hp-sigil, .hp-c-magenta .hp-pk { color: var(--hp-magenta-2); }
+        .hp-c-amber .hp-sigil, .hp-c-amber .hp-pk { color: var(--hp-amber-2); }
+        .hp-badge { font-size: 10px; padding: 1px 6px; border-radius: 0; background: var(--hp-paper-3); color: var(--hp-ink-soft); }
+        .hp-card-bd { padding: 18px 18px 20px; }
+        .hp-card-bd h3 {
+            margin: 0 0 8px;
+            font-family: var(--oak-mono);
+            font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+            color: var(--hp-ink);
+        }
+        .hp-card-bd p { margin: 0 0 12px; color: var(--hp-ink-soft); font-size: 13.5px; line-height: 1.65; }
+        .hp-card-bd p:last-child { margin-bottom: 0; }
+        .hp-preview { border-top: 1px dashed var(--hp-line); padding-top: 14px; font-size: 12px; color: var(--hp-ink-soft); }
+        .hp-pl { display: block; }
+        .hp-pk { font-weight: 600; }
+
+        /* ── terminal / code blocks ────────────────────────────────────── */
+        .hp-term {
+            border: 1px solid var(--hp-term-line-2); border-radius: var(--hp-radius);
+            background: linear-gradient(180deg, var(--hp-term-bg-2), var(--hp-term-bg));
+            color: var(--hp-term-ink);
+            overflow: hidden;
+        }
+        .hp-term-hd {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 12px; border-bottom: 1px solid var(--hp-term-line);
+            font-size: 11px; color: var(--hp-term-ink-mute);
+        }
+        .hp-term-dots { display: inline-flex; gap: 6px; }
+        .hp-term-dots span {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+        }
+        .hp-term-dots .hp-dot-r { background: #e26d6d; }
+        .hp-term-dots .hp-dot-y { background: #d8b148; }
+        .hp-term-dots .hp-dot-g { background: #5fa86a; }
+        .hp-term-title { margin-left: 6px; color: var(--hp-term-ink-mute); }
+        .hp-term-body {
+            padding: 14px 16px; font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; line-height: 1.7; overflow-x: auto;
+        }
+        .hp-term-body .hp-prompt { color: var(--hp-moss-2); user-select: none; margin-right: 8px; }
+        .hp-term-body .hp-arg { color: var(--hp-cyan); }
+        .hp-term-body .hp-pipe { color: var(--hp-magenta); }
+        .hp-term-body .hp-cmt { color: var(--hp-term-ink-mute); }
+        .hp-term-body .hp-ok { color: var(--hp-moss-2); }
+        .hp-term-body .hp-warn { color: var(--hp-amber-2); }
+        .hp-term-body .hp-err { color: var(--hp-vermilion); }
+        .hp-term-body pre { margin: 0; white-space: pre-wrap; }
+        .hp-term-body .hp-ln { display: block; white-space: pre-wrap; }
+
+        /* ── stats grid ──────────────────────────────────────────────── */
+        .hp-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+        }
+        .hp-stat {
+            border: 1px solid var(--hp-line); border-radius: var(--hp-radius);
+            padding: 14px 16px; background: var(--hp-paper);
+        }
+        .hp-stat-label {
+            font-size: 10.5px; color: var(--hp-ink-mute);
+            text-transform: lowercase; letter-spacing: 0.04em;
+        }
+        .hp-stat-val {
+            font-family: var(--oak-mono);
+            font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+            margin-top: 2px; color: var(--hp-ink);
+        }
+        .hp-stat-unit { font-size: 13px; color: var(--hp-ink-mute); margin-left: 3px; }
+        .hp-sv-moss { color: var(--hp-moss); }
+        .hp-sv-cy   { color: var(--hp-cyan-2); }
+        .hp-sv-mg   { color: var(--hp-magenta-2); }
+        .hp-sv-am   { color: var(--hp-amber-2); }
+
+        /* ── definition lists (FAQ-style) ────────────────────────────── */
+        .hp-dl { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 40px; }
+        @media (max-width: 700px) { .hp-dl { grid-template-columns: 1fr; } }
+        .hp-dl-q {
+            font-family: var(--oak-mono);
+            font-size: 13px; font-weight: 600; color: var(--hp-ink);
+            margin-bottom: 6px;
+        }
+        .hp-dl-q::before {
+            content: '// '; color: var(--hp-ink-mute); font-weight: 400;
+        }
+        .hp-dl-a { font-size: 13px; color: var(--hp-ink-soft); line-height: 1.65; }
+        .hp-dl-a a { color: var(--hp-moss); border-bottom: 1px solid color-mix(in oklch, var(--hp-moss) 40%, transparent); }
+        .hp-dl-a a:hover { border-bottom-color: var(--hp-moss); }
+
+        /* ── corners / ascii flourish ───────────────────────────────── */
+        .hp-corners {
+            position: absolute; inset: 18px; pointer-events: none;
+            color: var(--hp-ink-mute); opacity: 0.45; font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .hp-corners .hp-tl,
+        .hp-corners .hp-tr,
+        .hp-corners .hp-bl,
+        .hp-corners .hp-br { position: absolute; }
+        .hp-corners .hp-tl { top: 0; left: 0; }
+        .hp-corners .hp-tr { top: 0; right: 0; }
+        .hp-corners .hp-bl { bottom: 0; left: 0; }
+        .hp-corners .hp-br { bottom: 0; right: 0; }
+
+        /* Pre/code blocks in marketing pages */
+        .hp-code {
+            background: var(--hp-term-bg); color: var(--hp-term-ink);
+            border-radius: var(--hp-radius); border: 1px solid var(--hp-term-line-2);
+            padding: 14px 16px; overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65;
+        }
+        .hp-code .hp-prompt { color: var(--hp-moss-2); user-select: none; margin-right: 8px; }
+        .hp-code .hp-arg { color: var(--hp-cyan); }
+        .hp-code .hp-cmt { color: var(--hp-term-ink-mute); }
+        .hp-code .hp-flag { color: var(--hp-amber-2); }
+
+        /* Small numeric list — used in privacy/terms section bullets */
+        .hp-numlist { counter-reset: hpnum; padding-left: 0; list-style: none; }
+        .hp-numlist > li {
+            counter-increment: hpnum; position: relative;
+            padding-left: 32px; margin-top: 8px;
+        }
+        .hp-numlist > li::before {
+            content: '[' counter(hpnum, decimal-leading-zero) ']';
+            position: absolute; left: 0; top: 0; color: var(--hp-moss);
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Yarndings 20 — decorative dingbat face, self-hosted (latin subset,
+           ~4 KB) rather than pulled from the Google Fonts CDN so there's no
+           render-blocking stylesheet + cross-origin handshake in <head>. The
+           `font-display: swap` + system-ui fallback keep things sane until the
+           glyph font loads; the browser only fetches it on pages that render a
+           `.font-yarndings` element (the branch action-button icons), never on
+           pages that don't. */
+        @font-face {
+            font-family: 'Yarndings 20';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/yarndings-20-latin.woff2') format('woff2');
+        }
+        .font-yarndings { font-family: 'Yarndings 20', system-ui, sans-serif; }
+
+        @font-face { font-family: 'seti'; src: url('/seti.woff?v=9782730d') format('woff'); font-display: block; }
+        .file-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 1rem;
+            height: 1rem;
+            font-family: 'seti';
+            font-size: 21px;
+            font-style: normal;
+            font-weight: normal;
+            line-height: 1;
+            -webkit-font-smoothing: antialiased;
+            user-select: none;
+            color: var(--fi-light, currentColor);
+        }
+        html.dark .file-icon { color: var(--fi-dark, currentColor); }
+</style>
+    <script>(function(){try{var css='';for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(!k||k.indexOf('oak.sidebar.')!==0)continue;var v=parseInt(localStorage.getItem(k),10);if(isNaN(v)||v<=0||v>2000)continue;var ek=k.replace(/["\\\\]/g,'\\\\$&');css+='.sidebar-resizable:has(+ .sidebar-resizer[data-resize-key="'+ek+'"]){--sidebar-w:'+v+'px;}';}if(css){var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);}}catch(e){}})()</script>
+    <script>(function(){try{var m=[["oak.org.repoView","oak-initview-org-list"],["oak.home.repoView","oak-initview-home-list"]];for(var i=0;i<m.length;i++){if(localStorage.getItem(m[i][0])==="list")document.documentElement.classList.add(m[i][1]);}}catch(e){}})()</script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "name": "Oak dev blog",
+      "url": "https://oak.space/blog",
+      "description": "Notes from building Oak — version control for agents.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Oakspace Inc.",
+        "logo": { "@type": "ImageObject", "url": "https://oak.space/logo.png" }
+      }
+    }
+    </script>
+    
+</head>
+<body class="bg-oak-paper text-oak-ink min-h-screen flex flex-col ">
+    <nav class="border-b border-oak-line bg-oak-paper relative z-10 shrink-0">
+        <div class="mx-auto px-4 sm:px-6 py-2" style="max-width: var(--oak-page-w); width: 100%;">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <a href="/" aria-label="Oak home" title="Home" class="shrink-0 flex items-center leading-none select-none text-oak-ink hover:opacity-80 transition-opacity"><span aria-hidden="true" class="text-2xl leading-none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19 19" width="1em" height="1em" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><rect x="9" y="0" width="1" height="1"/><rect x="8" y="1" width="3" height="1"/><rect x="7" y="2" width="5" height="1"/><rect x="6" y="3" width="7" height="1"/><rect x="9" y="4" width="1" height="1"/><rect x="9" y="5" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="6" y="6" width="7" height="1"/><rect x="15" y="6" width="1" height="1"/><rect x="2" y="7" width="2" height="1"/><rect x="6" y="7" width="7" height="1"/><rect x="15" y="7" width="2" height="1"/><rect x="1" y="8" width="3" height="1"/><rect x="6" y="8" width="3" height="1"/><rect x="10" y="8" width="3" height="1"/><rect x="15" y="8" width="3" height="1"/><rect x="0" y="9" width="8" height="1"/><rect x="11" y="9" width="8" height="1"/><rect x="1" y="10" width="3" height="1"/><rect x="6" y="10" width="3" height="1"/><rect x="10" y="10" width="3" height="1"/><rect x="15" y="10" width="3" height="1"/><rect x="2" y="11" width="2" height="1"/><rect x="6" y="11" width="7" height="1"/><rect x="15" y="11" width="2" height="1"/><rect x="3" y="12" width="1" height="1"/><rect x="6" y="12" width="7" height="1"/><rect x="15" y="12" width="1" height="1"/><rect x="9" y="13" width="1" height="1"/><rect x="9" y="14" width="1" height="1"/><rect x="6" y="15" width="7" height="1"/><rect x="7" y="16" width="5" height="1"/><rect x="8" y="17" width="3" height="1"/><rect x="9" y="18" width="1" height="1"/></svg></span></a>
+                    <div class="relative min-w-0 flex-1">
+                        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar overscroll-x-contain pr-8"><a href="/docs" class="inline-flex shrink-0 items-center whitespace-nowrap text-sm px-2 py-1 transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:!text-black focus-visible:outline-2 focus-visible:outline-oak-moss-soft focus-visible:outline-offset-4 dark:focus-visible:!text-white motion-reduce:transition-none text-oak-ink-soft hover:!text-black dark:hover:!text-white">Docs</a><a href="/explore" class="inline-flex shrink-0 items-center whitespace-nowrap text-sm px-2 py-1 transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:!text-black focus-visible:outline-2 focus-visible:outline-oak-moss-soft focus-visible:outline-offset-4 dark:focus-visible:!text-white motion-reduce:transition-none text-oak-ink-soft hover:!text-black dark:hover:!text-white">Explore</a><a href="/blog" class="inline-flex shrink-0 items-center whitespace-nowrap text-sm px-2 py-1 transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:!text-black focus-visible:outline-2 focus-visible:outline-oak-moss-soft focus-visible:outline-offset-4 dark:focus-visible:!text-white motion-reduce:transition-none text-oak-ink dark:!text-white">Blog</a><a href="/pricing" class="inline-flex shrink-0 items-center whitespace-nowrap text-sm px-2 py-1 transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:!text-black focus-visible:outline-2 focus-visible:outline-oak-moss-soft focus-visible:outline-offset-4 dark:focus-visible:!text-white motion-reduce:transition-none text-oak-ink-soft hover:!text-black dark:hover:!text-white">Pricing</a><a href="/about" class="inline-flex shrink-0 items-center whitespace-nowrap text-sm px-2 py-1 transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:!text-black focus-visible:outline-2 focus-visible:outline-oak-moss-soft focus-visible:outline-offset-4 dark:focus-visible:!text-white motion-reduce:transition-none text-oak-ink-soft hover:!text-black dark:hover:!text-white">About</a></div>
+                        <div aria-hidden="true" class="pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l from-oak-paper to-transparent"></div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 shrink-0">
+                    <a href="/login" class="text-oak-ink-soft hover:!text-black dark:hover:!text-white text-sm transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none">Log in</a>
+                <a href="/signup" class="inline-flex items-center gap-1.5 text-sm px-3.5 py-1.5 bg-gray-900 hover:bg-gray-700 text-white rounded-md transition-colors dark:bg-white dark:text-black dark:hover:bg-gray-200">
+                    <span>Sign up</span>
+                </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+<main class="flex-1">
+            <style>
+              /* Docs-style two-column reading layout: post list rail · article.
+                 Scoped class names so the link styling never leaks elsewhere. */
+              .blog-nav-link { display: block; width: 100%; text-align: left; border-radius: 0; padding: 0.4rem 0.75rem; font-size: 0.95rem; line-height: 1.3; color: #4b5563; transition: background-color .12s, color .12s; }
+              .blog-nav-link:hover { background: #f9fafb; color: #111827; }
+              .blog-nav-active { background: rgb(var(--oak-moss-pale)); color: rgb(var(--oak-moss)); font-weight: 400; box-shadow: inset 0 0 0 1px rgb(var(--oak-moss-soft)); }
+              .blog-nav-active:hover { background: rgb(var(--oak-moss-pale)); color: rgb(var(--oak-moss)); }
+
+              /* Narrow screens (below lg) swap the left rail for a native
+                 dropdown — the familiar mobile pattern for picking from a
+                 list, and it shows full titles in the OS picker instead of
+                 truncating them like a horizontal pill scroller. */
+              .blog-nav-select { width: 100%; appearance: none; -webkit-appearance: none; background-color: #fff; border: 1px solid #e5e7eb; border-radius: 0; padding: 0.6rem 2.25rem 0.6rem 0.85rem; font-size: 0.95rem; line-height: 1.3; color: #111827; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%239ca3af' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.1rem; }
+              .blog-nav-select:focus { outline: none; border-color: rgb(var(--oak-moss-soft)); box-shadow: 0 0 0 1px rgb(var(--oak-moss-soft)); }
+
+              /* Dark mode: the post list rail hardcodes light-mode grays
+                 above, so in dark mode its text sinks into the dark
+                 background. Repaint the non-active states with theme tokens.
+                 Scope to :not(.blog-nav-active) so the active item keeps its
+                 moss accent (which already adapts via the --oak-moss* vars). */
+              html.dark .blog-nav-link:not(.blog-nav-active) { color: rgb(var(--oak-ink-soft)); }
+              html.dark .blog-nav-link:not(.blog-nav-active):hover { background: rgba(255,255,255,0.05); color: rgb(var(--oak-ink)); }
+              html.dark .blog-nav-select { background-color: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); color: rgb(var(--oak-ink)); }
+
+              /* "get updates by email" box — mirrors the homepage mail card
+                 (.hp-mail-* in pages.rs INDEX_HEAD_EXTRAS) so the blog's
+                 subscribe box matches the homepage. Reuses the global
+                 --hp-* / --oak-mono marketing tokens from layout.rs, so it
+                 themes for light/dark the same way. Keep in sync with the
+                 homepage box. */
+              .hp-mail-card { display: block; border: 1px solid var(--hp-line-strong); background: var(--hp-paper); color: var(--hp-ink); padding: 22px; text-decoration: none; }
+              .hp-mail-h3 { margin: 0 0 8px; color: var(--hp-ink); font-family: var(--oak-mono); font-size: 16px; line-height: 1.4; font-weight: 600; }
+              .hp-mail-p { margin: 0 0 18px; color: var(--hp-ink-soft); font-size: 14px; line-height: 1.7; }
+              .hp-mail-form-row { display: flex; gap: 8px; align-items: stretch; }
+              @media (max-width: 560px) { .hp-mail-form-row { flex-direction: column; } }
+              .hp-mail-input { flex: 1 1 auto; min-width: 0; border: 1px solid var(--hp-line-strong); background: var(--hp-paper); color: var(--hp-ink); padding: 10px 12px; font-family: var(--oak-mono); font-size: 13px; line-height: 1.4; }
+              .hp-mail-input:focus { outline: 2px solid var(--hp-ink); outline-offset: 2px; }
+              .hp-mail-btn { border: 1px solid var(--hp-ink); background: var(--hp-ink); color: var(--hp-paper); padding: 10px 14px; font-family: var(--oak-mono); font-size: 12px; line-height: 1.2; font-weight: 600; cursor: pointer; transition: transform 0.12s ease-out; }
+              .hp-mail-btn:active { transform: scale(0.97); }
+              .hp-mail-links { margin: 16px 0 0; color: var(--hp-ink-soft); font-size: 12px; line-height: 1.6; }
+              .hp-mail-links a { color: var(--hp-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+            </style>
+            <div class="oak-page-frame">
+              <div class="flex items-start">
+
+                <aside class="hidden lg:block w-60 shrink-0 self-stretch border-r border-gray-200">
+                  <div class="sticky top-0 px-4 py-10">
+                    <p class="px-3 mb-3 text-xs font-normal uppercase tracking-wider text-gray-400">Blog</p>
+                    <nav class="space-y-0.5"><button onclick="switchBlogPost('dev-log-2')" data-blog="dev-log-2" class="blog-nav-link blog-nav-active">Dev log #2: August to October</button><button onclick="switchBlogPost('dev-log-1')" data-blog="dev-log-1" class="blog-nav-link">Dev log #1: six weeks since launch</button><button onclick="switchBlogPost('git-is-forever')" data-blog="git-is-forever" class="blog-nav-link">Git is forever. I'm building Oak anyways.</button></nav>
+                  </div>
+                </aside>
+
+                <div class="flex-1 min-w-0 px-5 sm:px-8 lg:px-12 py-10">
+                  <div class="lg:hidden mb-8">
+                    <label for="blog-nav-select" class="block px-1 mb-2 text-xs font-normal uppercase tracking-wider text-gray-400">Blog</label>
+                    <select id="blog-nav-select" onchange="switchBlogPost(this.value)" aria-label="Choose a blog post" class="blog-nav-select"><option value="dev-log-2" selected>Dev log #2: August to October</option><option value="dev-log-1">Dev log #1: six weeks since launch</option><option value="git-is-forever">Git is forever. I'm building Oak anyways.</option></select>
+                  </div>
+                  <div id="blog-panel-dev-log-2" data-blog-panel="dev-log-2" class="">    <article class="max-w-3xl">
+
+        <header class="mb-12">
+            <p class="text-xs uppercase tracking-[0.14em] text-oak-ink-soft mb-6 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <time datetime="2026-10-06">October 6, 2026</time>
+                <span class="text-gray-300">&middot;</span>
+                <span>5 min read</span>
+                <span class="text-gray-300">&middot;</span>
+                <span>AI</span>
+                <span class="text-gray-300">&middot;</span>
+                <span>Blog post #3</span>
+            </p>
+            <h1 class="font-title text-4xl sm:text-5xl text-oak-ink leading-[1.05] pb-4">
+                Dev log #2: August to October
+            </h1>
+        </header>
+
+        <div class="markdown-body prose-blog">
+
+            <p>Changes from August 4 to October 6, 2026 across <a href="/oak/oak">oak/oak</a> and <a href="/oak/oakspace">oak/oakspace</a>. About 115 merged branches. CLI v0.102.0 &rarr; v0.105.0. Previous: <a href="/blog#dev-log-1">Dev log #1</a>.</p>
+
+            <h2>Pricing</h2>
+
+            <ul>
+                <li>Paid plans and their limits moved behind a feature flag. Every account gets 100 GB during the beta.</li>
+                <li>Docs now include an example session, answers about the CI runner, and a price ballpark.</li>
+            </ul>
+
+            <h2>Data safety fixes</h2>
+
+            <ul>
+                <li><strong>Merge base on partial history (0.104.0).</strong> On a shallow or partially backfilled commit graph, 0.103.0 could pick a too-old merge base, so <code>oak pull</code> could re-apply a change main had reverted and merge previews could predict against the wrong base. A merge base computed on a partial graph is now either correct or reported unavailable (<code>IncompleteAncestry</code>, exit 5).</li>
+                <li><strong><code>oak pull</code> never drops local-only commits (0.105.0).</strong> Against a local <code>oak serve</code>, push &rarr; commit &rarr; pull could reset the branch and discard the unpushed commit. Pull now checks that the new head contains the local tip before writing anything, and otherwise keeps, re-parents, or enters the conflict flow. <code>--force</code> parks the old tip as <code>&lt;branch&gt;.orphaned-&lt;ts&gt;</code>. Hosted oak.space was not affected.</li>
+                <li><strong><code>oak close --remote</code></strong> no longer resets a local branch that is ahead of the remote.</li>
+                <li><strong>Hosted merge</strong> uses compare-and-swap on the resolved heads, so a concurrent merge or a push during a merge can&rsquo;t lose acknowledged work.</li>
+                <li><strong>Zero-byte files (0.102.1).</strong> Repos containing empty files are clonable again, and the server no longer silently omits blobs it can&rsquo;t ship.</li>
+                <li>Diff patches keep <code>\ No newline at end of file</code> markers and CRLF bytes so they apply exactly.</li>
+            </ul>
+
+            <h2>Content integrity</h2>
+
+            <ul>
+                <li>Clone runs a bounded integrity proof before transfer: header-only history traversal with per-request budgets, one pinned branch-head snapshot for the whole clone, and <code>412</code> if the branch moves mid-clone.</li>
+                <li>If the proof runs out of budget, clone reports <em>inconclusive</em> (exit 8, <code>integrity_inconclusive</code>) instead of missing content, and suggests <code>--shallow</code>. <code>oak doctor --json</code> reports <code>verified</code> / <code>failed</code> / <code>inconclusive</code>.</li>
+                <li>Admission is rate-limited per principal, repository and profile; <code>429</code>s carry <code>Retry-After</code> and the client retries within 60 s.</li>
+                <li>Publication walks the complete commit graph; the server rejects commits whose parent or merge parent is absent.</li>
+                <li>Blob ingest and publication were hardened end to end.</li>
+            </ul>
+
+            <h2>Security</h2>
+
+            <ul>
+                <li>A checkout&rsquo;s repository API key is bound to the server that issued it and is never sent to another remote. Previously, <code>oak push -r &lt;other&gt;</code> or <code>OAK_REMOTE=&lt;other&gt;</code> sent it there. If you did that, rotate the repository&rsquo;s key.</li>
+                <li>Both installers (<code>install.sh</code>, <code>install.ps1</code>) verify Minisign signatures on the release and the mounter before replacing the existing binary, using a pinned Minisign bootstrap.</li>
+                <li>Fixed a stored XSS in URL-backed 3D previews.</li>
+                <li>Centralized security headers (<code>base-uri</code>, nosniff, framing, referrer, HSTS) on every HTML response.</li>
+                <li>Anonymous web feedback removed; the web form requires login. CLI feedback is unchanged.</li>
+                <li>Protected production deploys: signed grants, protected secrets kept out of command strings, least-privilege AWS boundary, signed crash-recoverable bootstrap.</li>
+                <li>The <code>oak_token</code> session cookie now persists for the token&rsquo;s lifetime instead of the browser session.</li>
+            </ul>
+
+            <h2>Review without a checkout</h2>
+
+            <ul>
+                <li><code>oak branch review|diff|triage --remote</code> pins to immutable source and target heads and fetches only the content it needs, without touching local refs.</li>
+                <li>Remote branch diffs include hunks and per-file omission reasons; remote file reads are supported.</li>
+                <li>Remote log: <code>oak log --remote --json</code> walks a branch&rsquo;s history without fetching it.</li>
+                <li>Whole-branch JSON contribution review.</li>
+                <li>Preview merging several independent sibling branches in order, with conflict/incomplete/stale outcomes.</li>
+                <li>Review distinguishes unavailable bytes from binary or large files and rejects unknown comparison targets.</li>
+                <li>Review won&rsquo;t recommend closing a branch that has uncommitted work in the current checkout.</li>
+                <li><code>merge_allowed</code> in review and triage is based on CI for the exact head.</li>
+            </ul>
+
+            <h2>Clone and sync</h2>
+
+            <ul>
+                <li><code>oak clone --branch NAME --expected-head FULL</code> clones one branch at an exact head.</li>
+                <li><code>oak clone --detached</code> lands on the default branch without creating a personal branch.</li>
+                <li><code>oak clone --from</code> seeds a clone from a local checkout.</li>
+                <li>Sparse clones negotiate cone-aware blob withholding and keep full identities for out-of-cone files.</li>
+                <li><code>oak switch -c</code> in a fresh shallow clone skips the ancestry walk when main hasn&rsquo;t moved (about 176 s &rarr; under 1 s on oak/oak).</li>
+                <li>Equal-tree refreshes leave unchanged files in place, keeping compiler caches warm.</li>
+                <li>Local <code>oak serve</code> honors <code>depth</code> on <code>GET /pull</code>.</li>
+                <li>New flags: <code>oak pull --json</code>, <code>oak pull --branch-only</code>, <code>oak desc --append</code>, <code>oak push --plan --json</code>.</li>
+            </ul>
+
+            <h2>CI</h2>
+
+            <ul>
+                <li><code>oak ci trigger</code> for an exact commit with an idempotency key.</li>
+                <li>Exact-run cancellation; <code>oak ci cancel --superseded</code>.</li>
+                <li><code>oak ci wait --current</code>, opt-in progress events, compact summaries without logs, and <code>run_url</code> in JSON.</li>
+                <li>CI step timings recorded by the server.</li>
+                <li>Build cache kept inside the runner&rsquo;s disk, sandbox SDK pinned to its image, and CLI CI builds tuned to avoid disk exhaustion.</li>
+            </ul>
+
+            <h2>Agent-facing CLI</h2>
+
+            <ul>
+                <li>JSON outputs carry receipts with explicit identity and confirmed/uncertain outcomes for push, merge, commit, finish, clone and CI.</li>
+                <li>Structured <code>oak merge</code> output stays parseable during post-merge refresh (progress goes to stderr).</li>
+                <li><code>oak change capture --json</code> records an immutable local change; <code>oak change export</code> writes it to a verified self-contained archive.</li>
+                <li><code>oak file inspect --at HEAD|HASH --json PATH</code> for pinned file evidence.</li>
+                <li><code>oak space inventory</code> lists local checkouts and mounts; fenced close of many branches at once.</li>
+                <li><code>oak diff</code>: git-compatible add/delete headers, <code>--check</code>, <code>--name-only</code> with <code>--print</code>.</li>
+                <li><code>oak restore</code> accepts literal <code>HEAD</code>.</li>
+                <li><code>oak commit</code> on a detached HEAD refuses.</li>
+                <li>The log and diff viewers support less and emacs keys.</li>
+                <li>Credential lock no longer steals from a live owner; concurrent logins don&rsquo;t lose credentials.</li>
+                <li><code>oak finish --json</code> reports <code>description_synced</code> truthfully.</li>
+            </ul>
+
+            <h2>Feedback</h2>
+
+            <ul>
+                <li>Ten-state feedback workflow, spam-safe exports, and automatic linking/closure from merged branch descriptions that reference <code>fb-N</code>.</li>
+                <li>Edits are atomic with revisions and an audit trail.</li>
+                <li>Admin CLI: <code>feedback list/show</code>, conditional transitions, manual link/unlink.</li>
+                <li>Web feedback preserves drafts across auth, rate-limit and network errors and returns accurate <code>Retry-After</code>.</li>
+            </ul>
+
+            <h2>Removed</h2>
+
+            <ul>
+                <li>The &ldquo;software factory&rdquo; orchestration layer and its <code>factory</code> flag.</li>
+            </ul>
+
+            <h2>Other</h2>
+
+            <ul>
+                <li><code>@public</code> path principal: a private repo can open-source part of its tree.</li>
+                <li>Homepage rewritten around three differentiators: mount instead of clone, messageless commits, large files without LFS.</li>
+                <li>Public docs and README updated to match what ships (agent skill, CI, shell completion, feedback).</li>
+                <li>Yanked transitive dependency (<code>multer</code>) removed from release builds.</li>
+            </ul>
+
+        </div>
+
+        <section class="mt-16 text-center">
+            <a href="/signup"
+               class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-700 text-white text-base font-medium rounded-md transition-colors">
+                Claim your username
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/>
+                </svg>
+            </a>
+        </section>
+
+        <section class="mt-16">
+            <div class="hp-mail-card">
+                <h3 class="hp-mail-h3">get updates by email</h3>
+                <p class="hp-mail-p">Roughly monthly updates about development and cool things.</p>
+                <form id="waitlist-form" method="post" action="/waitlist">
+                    <input type="hidden" name="source" value="blog-dev-log-2">
+                    <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+                        <input type="text" name="hp_url" value="" tabindex="-1" autocomplete="off">
+                    </div>
+                    <div class="hp-mail-form-row">
+                        <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" class="hp-mail-input">
+                        <button type="submit" class="hp-mail-btn">Subscribe</button>
+                    </div>
+                    <div class="waitlist-turnstile-container" style="margin-top:8px"></div>
+                </form>
+                <p class="hp-mail-links">
+                    or join <a href="https://discord.gg/UUPfUaeDnS" rel="noopener">discord</a> &middot;
+                    follow on <a href="https://x.com/oakdotspace" rel="noopener">x.com</a>
+                </p>
+            </div>
+        </section>
+
+        <footer class="mt-10 flex flex-col sm:flex-row gap-3 justify-end text-sm text-gray-500">
+            <div class="flex flex-wrap gap-4">
+                <a href="https://x.com/intent/tweet?text=Dev%20log%20%232%3A%20August%20to%20October&url=https%3A%2F%2Foak.space%2Fblog%23dev-log-2"
+                   rel="noopener" class="inline-flex items-center gap-2 hover:text-gray-900 transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Share on X
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Foak.space%2Fblog%23dev-log-2"
+                   rel="noopener" class="inline-flex items-center gap-2 hover:text-gray-900 transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.05-1.86-3.05-1.86 0-2.15 1.45-2.15 2.95v5.67H9.34V9h3.41v1.56h.05a3.74 3.74 0 013.37-1.85c3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+                    Share on LinkedIn
+                </a>
+            </div>
+        </footer>
+
+    </article>
+</div><div id="blog-panel-dev-log-1" data-blog-panel="dev-log-1" class=" hidden">    <article class="max-w-3xl">
+
+        <header class="mb-12">
+            <p class="text-xs uppercase tracking-[0.14em] text-oak-ink-soft mb-6 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <time datetime="2026-08-03">August 3, 2026</time>
+                <span class="text-gray-300">&middot;</span>
+                <span>4 min read</span>
+                <span class="text-gray-300">&middot;</span>
+                <span>AI</span>
+                <span class="text-gray-300">&middot;</span>
+                <span>Blog post #2</span>
+            </p>
+            <h1 class="font-title text-4xl sm:text-5xl text-oak-ink leading-[1.05] pb-4">
+                Dev log #1: six weeks since launch
+            </h1>
+        </header>
+
+        <div class="markdown-body prose-blog">
+
+            <p>Changes from June 22 to August 3, 2026 across <a href="/oak/oak">oak/oak</a> (core and CLI) and <a href="/oak/oakspace">oak/oakspace</a> (the oak.space server). About 190 commits. CLI v0.99 &rarr; v0.102.</p>
+
+            <h2>Windows</h2>
+
+            <ul>
+                <li>Windows x86_64 build. Install from PowerShell: <code>irm https://oak.space/install.ps1 | iex</code>. Installs <code>oak.exe</code> to <code>%USERPROFILE%\.local\bin</code> and adds it to <code>PATH</code>.</li>
+                <li>Clone, push, pull, commit, branch and merge work.</li>
+                <li><code>oak mount</code> works on Windows via the <a href="https://learn.microsoft.com/en-us/windows/win32/projfs/projected-file-system">Projected File System</a> (an optional Windows feature, enabled once per machine).</li>
+                <li>The Unix installer serves native Intel-macOS binaries instead of ARM builds under Rosetta.</li>
+                <li>Supported: macOS (Apple Silicon, Intel), Linux x86_64, Windows x86_64. Linux ARM64 binaries are published but not yet picked by the installer.</li>
+            </ul>
+
+            <h2>Native CI</h2>
+
+            <p>Workflows in <code>.oak/workflows/*.yml</code> are parsed, scheduled and logged by the server; jobs run in Cloudflare Sandboxes driven by a Durable Object. oakspace&rsquo;s own build and deploy moved off GitHub Actions onto it on July 6.</p>
+
+            <ul>
+                <li>Per-repo secrets, encrypted at rest (ChaCha20-Poly1305), plus <code>env:</code> maps at workflow and job level.</li>
+                <li>Dispatch is acked immediately; a <code>RunCoordinator</code> Durable Object drives jobs from an alarm loop so runs can&rsquo;t get stuck in &ldquo;running&rdquo;.</li>
+                <li>Live logs over SSE for every lifecycle event. ANSI colors render.</li>
+                <li>Cancellation of in-flight runs from the UI or API.</li>
+                <li>Build caching: the sandbox image includes the pinned Rust toolchain, bun, nextest and zstd; workflows get a per-job <code>cache:</code> block backed by R2, uploaded in streamed parts.</li>
+                <li>Per-plan quotas: metered minutes, concurrency limits with queueing, run-duration caps.</li>
+                <li>Merge gate: squash merges are blocked on red CI, shown on the branch slide-over, with an explicit force path.</li>
+                <li>CLI: <code>oak ci runs</code>, <code>status</code>, <code>logs</code>, <code>rerun</code>, and <code>oak merge --wait</code>.</li>
+                <li>The dedicated CI page was removed. Run status is a chip on each branch row and merged-commit row.</li>
+                <li>Fixed multi-line CI secrets (e.g. SSH keys) being corrupted. Cause: Cloudflare&rsquo;s Sandbox SDK indents every line of multi-line env values. Worked around and reported upstream.</li>
+            </ul>
+
+            <h2><code>oak feedback</code></h2>
+
+            <ul>
+                <li>New command. Accepts <code>-m</code>, a file, or stdin; opens <code>$EDITOR</code> with no input; works without a TTY. Returns a reference <code>fb-N</code>.</li>
+                <li>Storage moved from Cloudflare D1 to the main Postgres. Added a Discord outbox, admin triage view, update API (so agents can triage their own reports), and a spam status.</li>
+                <li>Over a hundred items filed so far, mostly by agents. Many commits in this period reference the <code>fb-N</code> they close.</li>
+            </ul>
+
+            <h2>Path permissions in the repo</h2>
+
+            <p>Declared in <code>.oak/PERMISSIONS</code> (CODEOWNERS-shaped), always read from the <code>main</code> tip:</p>
+
+            <pre><code>infra/secrets/**   @zdgeier @group/sec-team
+scripts/           @group/ops
+scripts/public/    *
+vault/</code></pre>
+
+            <ul>
+                <li>Narrow a subtree to specific people or groups while the rest of the repo stays open.</li>
+                <li>Widen a subtree with <code>@public</code> so a private repo can publish an open-source part.</li>
+                <li>Grants can name org-level groups.</li>
+                <li>The CLI reports unreadable paths as restricted, not missing.</li>
+                <li>Moved from database tables to a repo file. Still behind the <code>path-permissions</code> flag.</li>
+            </ul>
+
+            <h2>File previews and diffs</h2>
+
+            <ul>
+                <li>New preview/diff support: archives and packages, spreadsheets (workbook grids), media containers (metadata diffs), 3D/CAD (VOX, X3D, 3MF, USD/USDZ; semantic summaries for IFC and STEP), scientific binaries (GRIB, NumPy, FITS, miniSEED), fonts (including visual diffs), markup, subtitles, calendars, contacts, CSS colors, PostScript.</li>
+                <li>Audio: bounded WAV/AIFF/CAF PCM decoding with waveform, peak and RMS rendering, before/after diff panels, per-format playback help.</li>
+                <li>Bounded chunk readers and byte-range support, so previewing a large file doesn&rsquo;t download all of it.</li>
+                <li>Diffs are syntax-highlighted with word-level change marks.</li>
+                <li>Drag files onto the home page to create a repo, or onto a repo&rsquo;s file list to commit them.</li>
+            </ul>
+
+            <h2>Hash verification</h2>
+
+            <ul>
+                <li>Hashed fields of stored commits are immutable and verifiable end to end.</li>
+                <li>Verification happens at insert in the storage layer.</li>
+                <li>Fixed pull/clone bugs: wire serialization that didn&rsquo;t round-trip, backfill verifying a merge parent&rsquo;s ancestors under the wrong branch name, Postgres timestamp truncation changing a hash, and a pull that hung after the branch was squash-merged remotely.</li>
+                <li>Branch rename rewrote <code>commits.branch_name</code> (a hashed field) without re-hashing, so renamed branches failed verification on clone. The rename endpoint now returns 503. A branch-identity redesign was written, reviewed, and rejected; it&rsquo;s checked in marked <code>REJECTED</code>.</li>
+            </ul>
+
+            <h2>Mount, review, and CLI</h2>
+
+            <ul>
+                <li><code>oak mount --branch</code> mounts an existing remote branch. <code>oak switch</code> is mount-aware.</li>
+                <li>Merge previews detect when a clean merge would also silently revert work on the target (four-tree merge-safety check).</li>
+                <li>Shell completion.</li>
+                <li><code>oak log -S</code> / <code>-G</code> pickaxe search.</li>
+                <li>Diff output reworked for agents: progressive disclosure and conflict-aware evidence.</li>
+                <li>Content-similarity rename detection in every diff path.</li>
+                <li><code>oak skill install</code> installs the Oak agent skill into your agent&rsquo;s skill directory.</li>
+            </ul>
+
+            <h2>Releases</h2>
+
+            <ul>
+                <li>v0.99.0, v0.100.0, v0.101.0, v0.102.0.</li>
+                <li>Release publishing rebuilt in three steps: content-keyed reads, staged uploads via <code>/api/releases/stage</code>, content-addressed promotion; the legacy release-write endpoint is retired.</li>
+                <li>Signing derives its identity from the P12, uses least-privilege tokens, and persists no git credentials.</li>
+                <li>CI builds Windows and Intel-macOS targets on every commit.</li>
+            </ul>
+
+            <h2>Behind a flag</h2>
+
+            <ul>
+                <li>An agent orchestration layer (&ldquo;software factory&rdquo;) behind the <code>factory</code> flag, with a web UI for connecting agents, per-agent delivery secrets, and editing path permissions and factory config as a proposed branch.</li>
+            </ul>
+
+            <h2>Other</h2>
+
+            <ul>
+                <li>Closed branches can be reopened.</li>
+                <li>Branch read receipts: who viewed a branch and when.</li>
+                <li>Keyboard navigation for branch lists, file trees and the document pane.</li>
+                <li>Per-repo Ideas board, which can be public on a private repo.</li>
+                <li>Security: same-origin CSRF guard on every cookie-authenticated mutation; CI endpoints return 404 instead of 403 for private repos.</li>
+                <li>Monitoring: growth graphs on the internal dashboard, five new Grafana alert rules, and removal of unused per-ASN metric series (11k of 13k).</li>
+                <li>Legal: updated AUP, Terms and Privacy Policy; DMCA designated agent; illegal-content reporting; governing law moved from Delaware to Washington.</li>
+                <li><code>repo_pages.rs</code> (98,126 lines) split into 27 submodules.</li>
+                <li>Dark-mode contrast fixes.</li>
+            </ul>
+
+        </div>
+
+        <section class="mt-16 text-center">
+            <a href="/signup"
+               class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-700 text-white text-base font-medium rounded-md transition-colors">
+                Claim your username
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/>
+                </svg>
+            </a>
+        </section>
+
+        <section class="mt-16">
+            <div class="hp-mail-card">
+                <h3 class="hp-mail-h3">get updates by email</h3>
+                <p class="hp-mail-p">Roughly monthly updates about development and cool things.</p>
+                <form id="waitlist-form" method="post" action="/waitlist">
+                    <input type="hidden" name="source" value="blog-dev-log-1">
+                    <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+                        <input type="text" name="hp_url" value="" tabindex="-1" autocomplete="off">
+                    </div>
+                    <div class="hp-mail-form-row">
+                        <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" class="hp-mail-input">
+                        <button type="submit" class="hp-mail-btn">Subscribe</button>
+                    </div>
+                    <div class="waitlist-turnstile-container" style="margin-top:8px"></div>
+                </form>
+                <p class="hp-mail-links">
+                    or join <a href="https://discord.gg/UUPfUaeDnS" rel="noopener">discord</a> &middot;
+                    follow on <a href="https://x.com/oakdotspace" rel="noopener">x.com</a>
+                </p>
+            </div>
+        </section>
+
+        <footer class="mt-10 flex flex-col sm:flex-row gap-3 justify-end text-sm text-gray-500">
+            <div class="flex flex-wrap gap-4">
+                <a href="https://x.com/intent/tweet?text=Dev%20log%20%231%3A%20six%20weeks%20since%20launch&url=https%3A%2F%2Foak.space%2Fblog%23dev-log-1"
+                   rel="noopener" class="inline-flex items-center gap-2 hover:text-gray-900 transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Share on X
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Foak.space%2Fblog%23dev-log-1"
+                   rel="noopener" class="inline-flex items-center gap-2 hover:text-gray-900 transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.05-1.86-3.05-1.86 0-2.15 1.45-2.15 2.95v5.67H9.34V9h3.41v1.56h.05a3.74 3.74 0 013.37-1.85c3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+                    Share on LinkedIn
+                </a>
+            </div>
+        </footer>
+
+    </article>
+</div><div id="blog-panel-git-is-forever" data-blog-panel="git-is-forever" class=" hidden">
+    <article class="max-w-3xl">
+
+        <header class="mb-12">
+            <p class="text-xs uppercase tracking-[0.14em] text-oak-ink-soft mb-6 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <time datetime="2026-06-22">June 22, 2026</time>
+                <span class="text-gray-300">&middot;</span>
+                <span>3 min read</span>
+                <span class="text-gray-300">&middot;</span>
+                <span>Zach Geier</span>
+                <span class="text-gray-300">&middot;</span>
+                <span>Blog post #1</span>
+            </p>
+            <h1 class="font-title text-4xl sm:text-5xl text-oak-ink leading-[1.05] pb-4">
+                Git is forever. I'm building Oak anyways.
+            </h1>
+        </header>
+
+        <figure class="mb-12 sm:-mx-8 lg:-mx-12">
+            <img src="/git-is-forever-ui.png" alt="The Oak web UI"
+                 width="3560" height="2200" style="aspect-ratio: 3560 / 2200;" decoding="async"
+                 class="w-full max-w-full h-auto rounded-lg">
+        </figure>
+
+        <div class="markdown-body prose-blog">
+
+	    <p>This is a little backstory on why I'm making Oak, if you'd like to read more about the new version control system I've been working on go <a href="https://oak.space">here</a>.
+
+            <p>Git is extremely good at what it was built for: humans making deliberate changes, reviewing patches, and preserving a distributed history that can survive decades. It was purpose-built for Linux kernel development and I don&rsquo;t believe anyone can make a better tool for that. Git is forever.</p>
+
+	    <p>But even though git is wonderful at many things, I started to wonder years ago if there could be something better. Almost everyone has their own problems with version control. What would a version control system look like if we created it from scratch today?</p>
+
+	    <p>This started a four year long adventure where I built a version control system in my free-time called Jam, quit my job, and ended up selling it to another company very early on so I could continue working on it full-time.</p>
+
+	    <p>That company unfortunately ended up shutting down in a little over a year.</p>
+
+            <p>However, I did get to see how good version control could feel if we just started over. There&rsquo;s so much freedom in building on a new foundation. I&rsquo;ve been thinking about version control systems every day since then.</p>
+
+            <p>With AI, I can finally build what I've been dreaming about. Version control systems are really hard to make, and even harder to make well. I&rsquo;ve done way more in the previous four months than I did in the past four years.</p>
+
+	    <p>Oak is the version control system I've been working on designed for your agents. It dramatically improves the speed and context your agents need when working on serious projects: 50% fewer VCS-related tokens and 90% faster per operation. With virtual mounts, agents locally and in the cloud no longer need a full copy of a repo to get working. You can work on many tasks in parallel without needing to download everything or fight worktrees. Version control shouldn't waste you or your agents time.</p>
+	    <p>It should be fast, creative and fun to make things with your agents.</p>
+
+	    <p>Oak is still early in development. There's no Windows build and missing plenty of features. No CI, no issues, no comments. We still use GitHub Actions for building Oak now, but we've been fully bootstrapped on Oak with no Git backup for several months.
+
+	    <p>It's currently made by <a href="https://linkedin.com/in/zdgeier">Zach Geier (me)</a>, with <a href="https://www.linkedin.com/in/mrmrs/">Adam Morse</a> shaping the product and visual system. It&rsquo;s built on an <a href="/oak/oak">open-source core and CLI</a>. You can self host with `oak serve` and export your repo to a git repo with `oak export` at any time.</p>
+
+            <p>And you can try it out now!</p>
+
+	    <p>I would love to hear your ideas and thoughts. Please, <a href="https://discord.gg/UUPfUaeDnS">join the Discord</a> if you're interested in following along or want to reach out.</p>
+
+            <p>&mdash; Zach</p>
+
+        </div>
+
+        <figure class="mt-12">
+            <style>
+                #yt-lite-0qizaR4JGUk .yt-lite-play { transition: background .15s ease, transform .15s ease; }
+                #yt-lite-0qizaR4JGUk:hover .yt-lite-play,
+                #yt-lite-0qizaR4JGUk:focus-visible .yt-lite-play { background: rgba(0,0,0,.8); transform: translate(-50%,-50%) scale(1.08); }
+            </style>
+            <div class="relative w-full overflow-hidden rounded-lg border border-oak-line-strong shadow-xs"
+                 style="aspect-ratio: 16 / 9;">
+                <a id="yt-lite-0qizaR4JGUk" href="https://www.youtube.com/watch?v=0qizaR4JGUk"
+                   class="absolute inset-0 block w-full h-full" style="background:#000;"
+                   aria-label="Play video: Git is forever. I'm building Oak anyways.">
+                    <img src="https://i.ytimg.com/vi/0qizaR4JGUk/maxresdefault.jpg"
+                         onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/0qizaR4JGUk/hqdefault.jpg';"
+                         alt="" aria-hidden="true"
+                         class="absolute inset-0 block w-full h-full" style="object-fit:cover;">
+                    <span class="yt-lite-play" aria-hidden="true"
+                          style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:9999px;background:rgba(0,0,0,.6);box-shadow:0 2px 10px rgba(0,0,0,.35);">
+                        <svg viewBox="0 0 24 24" width="26" height="26" style="margin-left:2px;fill:#fff;"><path d="M8 5v14l11-7z"/></svg>
+                    </span>
+                </a>
+            </div>
+        </figure>
+        <script>
+            (function () {
+                var el = document.getElementById('yt-lite-0qizaR4JGUk');
+                if (!el) return;
+                el.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var f = document.createElement('iframe');
+                    f.src = 'https://www.youtube.com/embed/0qizaR4JGUk?si=JbMmc-TfFPIkHCi9&autoplay=1';
+                    f.title = 'YouTube video player';
+                    f.setAttribute('frameborder', '0');
+                    f.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+                    f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+                    f.allowFullscreen = true;
+                    f.className = 'absolute inset-0 block w-full h-full';
+                    el.replaceWith(f);
+                });
+            })();
+        </script>
+
+        <section class="mt-16 text-center">
+            <a href="/signup"
+               class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-700 text-white text-base font-medium rounded-md transition-colors">
+                Claim your username
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/>
+                </svg>
+            </a>
+        </section>
+
+        <section class="mt-16">
+            <div class="hp-mail-card">
+                <h3 class="hp-mail-h3">get updates by email</h3>
+                <p class="hp-mail-p">Roughly monthly updates about development and cool things.</p>
+                <form id="waitlist-form" method="post" action="/waitlist">
+                    <input type="hidden" name="source" value="blog-git-is-forever">
+                    <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+                        <input type="text" name="hp_url" value="" tabindex="-1" autocomplete="off">
+                    </div>
+                    <div class="hp-mail-form-row">
+                        <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" class="hp-mail-input">
+                        <button type="submit" class="hp-mail-btn">Subscribe</button>
+                    </div>
+                    <div class="waitlist-turnstile-container" style="margin-top:8px"></div>
+                </form>
+                <p class="hp-mail-links">
+                    or join <a href="https://discord.gg/UUPfUaeDnS" rel="noopener">discord</a> &middot;
+                    follow on <a href="https://x.com/oakdotspace" rel="noopener">x.com</a>
+                </p>
+            </div>
+        </section>
+
+        <footer class="mt-10 flex flex-col sm:flex-row gap-3 justify-end text-sm text-gray-500">
+            <div class="flex flex-wrap gap-4">
+                <a href="https://x.com/intent/tweet?text=Git%20is%20forever.%20I%27m%20building%20Oak%20anyways.&url=https%3A%2F%2Foak.space%2Fblog%23git-is-forever"
+                   rel="noopener" class="inline-flex items-center gap-2 hover:text-gray-900 transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Share on X
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Foak.space%2Fblog%23git-is-forever"
+                   rel="noopener" class="inline-flex items-center gap-2 hover:text-gray-900 transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.05-1.86-3.05-1.86 0-2.15 1.45-2.15 2.95v5.67H9.34V9h3.41v1.56h.05a3.74 3.74 0 013.37-1.85c3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+                    Share on LinkedIn
+                </a>
+            </div>
+        </footer>
+
+    </article>
+</div>
+                </div>
+
+              </div>
+            </div>
+
+            <script>
+            function switchBlogPost(slug) {
+                document.querySelectorAll('[data-blog-panel]').forEach(function(p) {
+                    p.classList.toggle('hidden', p.getAttribute('data-blog-panel') !== slug);
+                });
+                document.querySelectorAll('[data-blog]').forEach(function(b) {
+                    b.classList.toggle('blog-nav-active', b.getAttribute('data-blog') === slug);
+                });
+                var sel = document.getElementById('blog-nav-select');
+                if (sel && sel.value !== slug) sel.value = slug;
+                if (history.replaceState) history.replaceState(null, '', '#' + slug);
+                window.scrollTo(0, 0);
+            }
+            (function() {
+                var hash = (window.location.hash || '').replace('#', '');
+                if (hash && document.getElementById('blog-panel-' + hash)) switchBlogPost(hash);
+            })();
+            </script>
+        </main>
+    <footer class="site-footer border-t border-oak-line bg-oak-paper mt-auto">
+        <div class="oak-page-frame px-6 pt-12 pb-8">
+            <div class="flex flex-col gap-10 sm:flex-row sm:items-start sm:justify-between sm:gap-16">
+                <div class="max-w-sm">
+                    <div class="mb-3">
+                        <a href="/" class="group relative flex items-center gap-1.5 text-base text-oak-ink hover:opacity-80 transition-opacity">
+            
+            <span aria-hidden="true" class="text-xl leading-none shrink-0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19 19" width="1em" height="1em" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><rect x="9" y="0" width="1" height="1"/><rect x="8" y="1" width="3" height="1"/><rect x="7" y="2" width="5" height="1"/><rect x="6" y="3" width="7" height="1"/><rect x="9" y="4" width="1" height="1"/><rect x="9" y="5" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="6" y="6" width="7" height="1"/><rect x="15" y="6" width="1" height="1"/><rect x="2" y="7" width="2" height="1"/><rect x="6" y="7" width="7" height="1"/><rect x="15" y="7" width="2" height="1"/><rect x="1" y="8" width="3" height="1"/><rect x="6" y="8" width="3" height="1"/><rect x="10" y="8" width="3" height="1"/><rect x="15" y="8" width="3" height="1"/><rect x="0" y="9" width="8" height="1"/><rect x="11" y="9" width="8" height="1"/><rect x="1" y="10" width="3" height="1"/><rect x="6" y="10" width="3" height="1"/><rect x="10" y="10" width="3" height="1"/><rect x="15" y="10" width="3" height="1"/><rect x="2" y="11" width="2" height="1"/><rect x="6" y="11" width="7" height="1"/><rect x="15" y="11" width="2" height="1"/><rect x="3" y="12" width="1" height="1"/><rect x="6" y="12" width="7" height="1"/><rect x="15" y="12" width="1" height="1"/><rect x="9" y="13" width="1" height="1"/><rect x="9" y="14" width="1" height="1"/><rect x="6" y="15" width="7" height="1"/><rect x="7" y="16" width="5" height="1"/><rect x="8" y="17" width="3" height="1"/><rect x="9" y="18" width="1" height="1"/></svg></span>
+            <span class="text-xl tracking-tight font-extrabold">oak</span>
+        </a>
+                        <span class="block mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">beta</span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-12 sm:gap-20 lg:gap-28">
+                <div>
+                    <p class="footer-col-h">// product</p>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="/" class="footer-link">Home</a></li>
+                        <li><a href="/docs" class="footer-link">Docs</a></li>
+                        <li><a href="/explore" class="footer-link">Explore</a></li>
+                        <li><a href="/blog" class="footer-link">Blog</a></li>
+                        <li><a href="/about" class="footer-link">About</a></li>
+                        <li><a href="/login" class="footer-link">Log in</a></li>
+                        <li><a href="/signup" class="footer-link">Sign up</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="footer-col-h">// connect</p>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="https://discord.gg/UUPfUaeDnS" rel="noopener" class="footer-link flex items-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 126.644 96" fill="currentColor" aria-hidden="true"><path d="M81.15,0c-1.2376,2.1973-2.3489,4.4704-3.3591,6.794-9.5975-1.4396-19.3718-1.4396-28.9945,0-.985-2.3236-2.1216-4.5967-3.3591-6.794-9.0166,1.5407-17.8059,4.2431-26.1405,8.0568C2.779,32.5304-1.6914,56.3725.5312,79.8863c9.6732,7.1476,20.5083,12.603,32.0505,16.0884,2.6014-3.4854,4.8998-7.1981,6.8698-11.0623-3.738-1.3891-7.3497-3.1318-10.8098-5.1523.9092-.6567,1.7932-1.3386,2.6519-1.9953,20.281,9.547,43.7696,9.547,64.0758,0,.8587.7072,1.7427,1.3891,2.6519,1.9953-3.4601,2.0457-7.0718,3.7632-10.835,5.1776,1.97,3.8642,4.2683,7.5769,6.8698,11.0623,11.5419-3.4854,22.3769-8.9156,32.0509-16.0631,2.626-27.2771-4.496-50.9172-18.817-71.8548C98.9811,4.2684,90.1918,1.5659,81.1752.0505l-.0252-.0505ZM42.2802,65.4144c-6.2383,0-11.4159-5.6575-11.4159-12.6535s4.9755-12.6788,11.3907-12.6788,11.5169,5.708,11.4159,12.6788c-.101,6.9708-5.026,12.6535-11.3907,12.6535ZM84.3576,65.4144c-6.2637,0-11.3907-5.6575-11.3907-12.6535s4.9755-12.6788,11.3907-12.6788,11.4917,5.708,11.3906,12.6788c-.101,6.9708-5.026,12.6535-11.3906,12.6535Z"/></svg>
+                            Discord</a></li>
+                        <li><a href="https://x.com/oakdotspace" rel="noopener" class="footer-link flex items-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            @oakdotspace</a></li>
+                        <li><a href="https://www.linkedin.com/company/oakvcs" rel="noopener" class="footer-link flex items-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.05-1.86-3.05-1.86 0-2.15 1.45-2.15 2.95v5.67H9.34V9h3.41v1.56h.05a3.74 3.74 0 013.37-1.85c3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+                            LinkedIn</a></li>
+                        <li><a href="/cdn-cgi/l/email-protection#0a706b69624a656b6124797a6b696f" class="footer-link flex items-center gap-2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+                            Email</a></li>
+                    </ul>
+                </div>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-oak-line">
+            <div class="oak-page-frame px-6 py-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-xs text-gray-400">
+                <p>&copy; 2026 Oakspace Inc. &nbsp;<span class="text-gray-300" title="oak build">fd89883a</span></p>
+                <div class="flex flex-wrap items-center gap-4">
+                    <a href="https://stats.uptimerobot.com/N8IhBTGrza" rel="noopener" class="hover:text-gray-600 transition-colors">Status</a>
+                    <a href="/terms" class="hover:text-gray-600 transition-colors">Terms</a>
+                    <a href="/aup" class="hover:text-gray-600 transition-colors">Acceptable Use</a>
+                    <a href="/privacy" class="hover:text-gray-600 transition-colors">Privacy</a>
+                    <button onclick="cycleTheme()" id="theme-toggle" class="flex items-center gap-1.5 px-2.5 py-1 border border-gray-200 hover:border-gray-300 hover:text-gray-600 transition-colors" title="Click to switch theme"><span class="sr-only">Switch theme, currently </span>
+                        <svg id="theme-icon-light" class="h-3.5 w-3.5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <svg id="theme-icon-dark" class="h-3.5 w-3.5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                        <svg id="theme-icon-auto" class="h-3.5 w-3.5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <span id="theme-label">Auto</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // Syntax-highlight + intraline-mark text diffs (repo_pages::diff_render).
+    //
+    // Each diff row's content sits in a `<code class="language-…">` cell, so
+    // highlight.js can tokenize it exactly as it does a file view. Rows that
+    // belong to a modified pair also carry `data-oak-il="a:b,c:d"` — half-open
+    // ranges in UTF-16 code units (JS string offsets) covering the words that
+    // changed. Those *must* be applied after tokenizing, because
+    // `hljs.highlightElement` rewrites the cell's innerHTML: we walk the
+    // resulting text nodes and wrap the requested character ranges, so the
+    // word-level marks survive on top of the syntax colours instead of
+    // fighting them.
+    //
+    // Diffs reach the DOM three ways — server-rendered on first paint, htmx
+    // swaps, and the branch/commit detail's own `fetch` + innerHTML lazy load —
+    // so this is a plain idempotent function every path calls, guarded by the
+    // `data-oak-hl` state below so a doubly-wired element is a no-op.
+    function oakMarkDiffRanges(code, spec) {
+        var ranges = [];
+        spec.split(',').forEach(function(part) {
+            var kv = part.split(':');
+            var a = parseInt(kv[0], 10), b = parseInt(kv[1], 10);
+            if (isFinite(a) && isFinite(b) && b > a) ranges.push([a, b]);
+        });
+        if (!ranges.length) return;
+        var walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT, null);
+        var nodes = [], starts = [], pos = 0, node;
+        while ((node = walker.nextNode())) { nodes.push(node); starts.push(pos); pos += node.data.length; }
+        for (var i = 0; i < nodes.length; i++) {
+            var start = starts[i], end = start + nodes[i].data.length, subs = [];
+            for (var j = 0; j < ranges.length; j++) {
+                var a = Math.max(ranges[j][0], start), b = Math.min(ranges[j][1], end);
+                if (b > a) subs.push([a - start, b - start]);
+            }
+            // Split from the end of the node backwards so earlier offsets stay
+            // valid as the node is chopped up.
+            subs.sort(function(x, y) { return y[0] - x[0]; });
+            for (var k = 0; k < subs.length; k++) {
+                var mid = nodes[i].splitText(subs[k][0]);
+                mid.splitText(subs[k][1] - subs[k][0]);
+                var span = document.createElement('span');
+                span.className = 'oak-il';
+                mid.parentNode.insertBefore(span, mid);
+                span.appendChild(mid);
+            }
+        }
+    }
+    // Undo a previous `oakMarkDiffRanges` application by unwrapping every
+    // `.oak-il` span in place, leaving its text exactly where the span was.
+    // Nothing else in the cell is touched: the marks are the only elements
+    // this code ever adds, they are fully reconstructible from `data-oak-il`,
+    // and `textContent = textContent` — the blunt alternative — would also
+    // flatten any other markup the cell happens to carry.
+    //
+    // This is needed before re-highlighting a cell that is already in state
+    // "0": its marks were applied to the plain text and are still in the DOM,
+    // and `hljs.highlightElement` treats *any* child element as unescaped
+    // embedded HTML, logging four security warnings per cell before
+    // discarding the spans anyway when it rewrites the innerHTML.
+    //
+    // Idempotent by construction: a cell with no marks returns immediately
+    // having written nothing, and the only thing that can put marks back is
+    // the single re-application below — so passes converge instead of nesting
+    // wrappers.
+    function oakUnwrapDiffMarks(code) {
+        // Static NodeList, so removing entries as we go is safe. Nested marks
+        // (which the disjoint server ranges don't produce, but which would
+        // survive this anyway) are unwrapped in document order: the inner
+        // span is lifted into the grandparent first, then unwrapped itself.
+        var marks = code.querySelectorAll('span.oak-il');
+        if (!marks.length) return false;
+        for (var i = 0; i < marks.length; i++) {
+            var span = marks[i], parent = span.parentNode;
+            if (!parent) continue;
+            while (span.firstChild) parent.insertBefore(span.firstChild, span);
+            parent.removeChild(span);
+        }
+        // Re-join the text nodes the marking pass split apart, so the cell is
+        // structurally identical to the one the server sent.
+        code.normalize();
+        return true;
+    }
+    // `data-oak-hl` records what has already been done to a cell, and is
+    // three-valued on purpose:
+    //
+    //   (absent) — never visited.
+    //   "0"      — visited but NOT syntax-highlighted, because hljs hadn't
+    //              loaded yet, the cell carries no `language-` class, or the
+    //              loaded bundle has no grammar for that language. The
+    //              intraline marks are already applied, to the plain text.
+    //   "1"      — tokenized by a registered grammar, with the intraline
+    //              marks re-applied on top of the tokens.
+    //
+    // Only "1" is terminal, so a cell left unhighlighted stays eligible for a
+    // later pass (e.g. one that runs after a language pack finishes loading)
+    // instead of being permanently marked done. A "0" cell that is still
+    // unhighlightable is left completely untouched — no DOM writes, no second
+    // application of the marks — so repeated `oakHighlightDiff(root)` calls
+    // converge rather than looping or double-wrapping.
+    //
+    // The 0 → 1 upgrade is therefore three steps, in this order: unwrap the
+    // marks the "0" pass left on the plain text, tokenize, re-apply the marks
+    // from `data-oak-il` on top of the tokens. Skipping the unwrap is not
+    // merely untidy — highlight.js would find child elements in the cell and
+    // log four "unescaped HTML … potentially serious security risk" warnings
+    // for each one before replacing them.
+    //
+    // The grammar check has to happen *before* `highlightElement`, because
+    // highlight.js gives the caller no usable signal afterwards. Handed a
+    // `language-` class it has no grammar for, it warns twice to the console
+    // and returns *early*: the element is left untouched, no exception is
+    // raised, and nothing reports that it did nothing. (`hljs.highlight` does
+    // throw `Unknown language`; `highlightElement` never reaches it.)
+    // `detect_language` maps 21 such languages — mermaid, dockerfile, glsl,
+    // latex, protobuf, rst … — and the old code marked the cell done
+    // regardless, which is what left a `.mmd` diff permanently unhighlighted
+    // with no path back. Asking `getLanguage` first is what makes "was this
+    // actually tokenized?" knowable; skipping the per-cell console warnings is
+    // a bonus.
+    window.oakHighlightDiff = function(root) {
+        root = root || document;
+        if (!root.querySelectorAll) return;
+        var cells = root.querySelectorAll('.oak-diff code');
+        for (var i = 0; i < cells.length; i++) {
+            var code = cells[i];
+            var state = code.getAttribute('data-oak-hl');
+            if (state === '1') continue;
+            var m = /(^|\s)language-([^\s]+)/.exec(code.className);
+            var lang = m ? m[2] : '';
+            var highlighted = false, unwrapped = false;
+            if (lang && window.hljs && hljs.getLanguage && hljs.getLanguage(lang)) {
+                // Retry of a "0" cell: its marks are on the plain text and
+                // must come out before tokenizing, or highlight.js reports
+                // them as unescaped embedded HTML (four console warnings per
+                // cell) on its way to discarding them.
+                if (state === '0') unwrapped = oakUnwrapDiffMarks(code);
+                try { hljs.highlightElement(code); highlighted = true; } catch (e) {}
+            }
+            // The marks go on whatever the cell holds now: the tokenized
+            // markup when highlighting ran, the plain text when it didn't.
+            // Apply them when the cell is newly visited, when highlighting
+            // just replaced the innerHTML that carried the previous ones, or
+            // when they were unwrapped for an attempt that then threw — that
+            // last case puts the cell back exactly where it started.
+            if (highlighted || unwrapped || state !== '0') {
+                var spec = code.getAttribute('data-oak-il');
+                if (spec) { try { oakMarkDiffRanges(code, spec); } catch (e) {} }
+            }
+            // A cell that is still unhighlightable stays "0" without a single
+            // DOM write — not even rewriting the attribute to the value it
+            // already holds — so a repeated pass over an unchanged page is
+            // observably inert, mutation records included.
+            var next = highlighted ? '1' : '0';
+            if (state !== next) code.setAttribute('data-oak-hl', next);
+        }
+    };
+
+    // Re-highlight code and render markdown after HTMX swaps. htmx is loaded
+    // with `defer`, so it isn't on `window` yet when this end-of-body script
+    // parses — register on `oakReady` (fires at DOMContentLoaded, after the
+    // deferred scripts have run) so the listener actually attaches.
+    oakReady(function() {
+    window.oakHighlightDiff(document);
+    if (window.htmx && document.body.addEventListener) {
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            if (window.hljs) {
+                evt.detail.elt.querySelectorAll('pre code').forEach(function(block) {
+                    // Guarded like every other highlightElement call site in
+                    // the crate. An unregistered `language-` class does not
+                    // throw (highlight.js quietly falls back to no-highlight),
+                    // but anything that did throw here would abort the loop
+                    // *and* skip the oakHighlightDiff call below, taking diff
+                    // highlighting down for the whole swap. Deliberately not
+                    // the diff pass's getLanguage pre-check: these blocks may
+                    // carry no `language-` class at all, and letting
+                    // highlight.js auto-detect those is the intent.
+                    try { hljs.highlightElement(block); } catch (e) {}
+                });
+            }
+            window.oakHighlightDiff(evt.detail.elt);
+            evt.detail.elt.querySelectorAll('script').forEach(function(oldScript) {
+                var newScript = document.createElement('script');
+                newScript.textContent = oldScript.textContent;
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+        });
+    }
+    });
+
+    // Draggable sidebars. Any `.sidebar-resizer` element finds the
+    // `.sidebar-resizable` aside immediately before it, then drags update
+    // the `--sidebar-w` CSS var on that aside. Width is persisted to
+    // localStorage under the resizer's `data-resize-key` so the user's
+    // preferred width sticks across refreshes per-surface.
+    (function(){
+        function init() {
+            document.querySelectorAll('.sidebar-resizer').forEach(function(handle) {
+                if (handle.dataset.wired) return;
+                handle.dataset.wired = '1';
+                // Left sidebars: the resizable pane is BEFORE the handle and
+                // dragging right grows it. Right panes (data-resize-side=right):
+                // the pane is AFTER the handle and dragging left grows it.
+                var side = handle.getAttribute('data-resize-side') || 'left';
+                var aside = side === 'right' ? handle.nextElementSibling : handle.previousElementSibling;
+                if (!aside || !aside.classList.contains('sidebar-resizable')) return;
+                var key = handle.getAttribute('data-resize-key') || 'oak.sidebar.width';
+                var min = parseInt(handle.getAttribute('data-resize-min') || '200', 10);
+                var max = parseInt(handle.getAttribute('data-resize-max') || '640', 10);
+                try {
+                    var saved = window.localStorage.getItem(key);
+                    if (saved) {
+                        var n = parseInt(saved, 10);
+                        if (!isNaN(n) && n >= min && n <= max) {
+                            aside.style.setProperty('--sidebar-w', n + 'px');
+                        }
+                    }
+                } catch (e) {}
+
+                handle.addEventListener('mousedown', function(ev) {
+                    if (ev.button !== 0) return;
+                    ev.preventDefault();
+                    var startX = ev.clientX;
+                    var startWidth = aside.getBoundingClientRect().width;
+                    document.body.classList.add('sidebar-dragging');
+                    handle.classList.add('is-dragging');
+
+                    function onMove(e) {
+                        var dx = e.clientX - startX;
+                        if (side === 'right') dx = -dx;
+                        var w = Math.max(min, Math.min(max, startWidth + dx));
+                        aside.style.setProperty('--sidebar-w', w + 'px');
+                    }
+                    function onUp() {
+                        document.removeEventListener('mousemove', onMove);
+                        document.removeEventListener('mouseup', onUp);
+                        document.body.classList.remove('sidebar-dragging');
+                        handle.classList.remove('is-dragging');
+                        try {
+                            var current = aside.getBoundingClientRect().width;
+                            window.localStorage.setItem(key, Math.round(current));
+                        } catch (e) {}
+                    }
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                });
+
+                handle.addEventListener('dblclick', function() {
+                    aside.style.removeProperty('--sidebar-w');
+                    try { window.localStorage.removeItem(key); } catch (e) {}
+                });
+            });
+        }
+        init();
+        // HTMX swap can land new sidebars; re-scan after each swap.
+        document.body.addEventListener('htmx:afterSwap', init);
+        // Expose the (idempotent) scanner so non-HTMX injections can wire their
+        // resizers too — e.g. the branch/commit detail fragment is swapped into
+        // the code view via a plain innerHTML fetch (no htmx:afterSwap fires), so
+        // its `.sidebar-resizer` would otherwise never get a drag handler.
+        window.oakInitSidebarResizers = init;
+    })();
+
+    // Tree-view helpers used by repo pages.
+    function selectTreeItem(el) {
+        document.querySelectorAll('.tree-entry').forEach(function(e) { e.classList.remove('active'); });
+        el.classList.add('active');
+    }
+    function toggleMarkdownView(btn) {
+        var preview = document.getElementById('md-preview');
+        var source = document.getElementById('md-source');
+        if (!preview || !source) return;
+        var label = btn.querySelector('.toggle-label');
+        if (btn.dataset.mode === 'preview') {
+            preview.classList.add('hidden');
+            source.classList.remove('hidden');
+            btn.dataset.mode = 'source';
+            if (label) label.textContent = 'Preview';
+        } else {
+            source.classList.add('hidden');
+            preview.classList.remove('hidden');
+            btn.dataset.mode = 'preview';
+            if (label) label.textContent = 'Source';
+        }
+    }
+    </script>
+    <script>
+    function cycleTheme(){var m=['auto','dark','light'],c=localStorage.getItem('oak-theme')||'auto',n=m[(m.indexOf(c)+1)%3];setTheme(n);}
+    function setTheme(t){localStorage.setItem('oak-theme',t);applyTheme(t);}
+    function applyTheme(t){var d=t==='dark'||(t==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d);
+    var il=document.getElementById('theme-icon-light'),id=document.getElementById('theme-icon-dark'),ia=document.getElementById('theme-icon-auto'),lbl=document.getElementById('theme-label');
+    if(il){il.classList.toggle('hidden',t!=='light');}if(id){id.classList.toggle('hidden',t!=='dark');}if(ia){ia.classList.toggle('hidden',t!=='auto');}
+    if(lbl){lbl.textContent=t.charAt(0).toUpperCase()+t.slice(1);}
+    var btns=document.querySelectorAll('[data-theme-option]');for(var i=0;i<btns.length;i++){var b=btns[i],a=b.getAttribute('data-theme-option')===t;b.classList.toggle('bg-white',a);b.classList.toggle('shadow-xs',a);b.classList.toggle('text-gray-900',a);b.classList.toggle('text-gray-500',!a);}}
+    applyTheme(localStorage.getItem('oak-theme')||'auto');
+    matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if((localStorage.getItem('oak-theme')||'auto')==='auto')applyTheme('auto');});
+    </script>
+    <script>
+    (function(){var t=document.getElementById('nav-toggle');var m=document.getElementById('nav-menu');var o=document.getElementById('nav-icon-open');var c=document.getElementById('nav-icon-close');if(t){t.addEventListener('click',function(){var h=m.classList.toggle('hidden');o.classList.toggle('hidden',!h);c.classList.toggle('hidden',h);});}}());
+    </script>
+    <script>
+    // Account-menu toggle for the unified site header (render_header_user_menu).
+    // The breadcrumb-chrome pages bind this via render_home_spa_script's own
+    // initUserMenu; this copy covers the marketing + auth pages, which render
+    // the header but not that script. Idempotent via the data-menuBound guard.
+    (function(){var btn=document.querySelector('[data-user-menu-button]');var menu=document.querySelector('[data-user-menu]');if(!btn||!menu)return;if(btn.dataset.menuBound==='true')return;btn.dataset.menuBound='true';function close(){menu.classList.add('hidden');btn.setAttribute('aria-expanded','false');}function open(){menu.classList.remove('hidden');btn.setAttribute('aria-expanded','true');}btn.addEventListener('click',function(ev){ev.stopPropagation();if(menu.classList.contains('hidden'))open();else close();});document.addEventListener('click',function(ev){if(menu.classList.contains('hidden'))return;if(btn.contains(ev.target)||menu.contains(ev.target))return;close();});document.addEventListener('keydown',function(ev){if(ev.key==='Escape')close();});}());
+    </script>
+
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback&render=explicit" async defer></script>
+<script>
+function onloadTurnstileCallback() {
+  document.querySelectorAll('.waitlist-turnstile-container').forEach(function(el) {
+    window.turnstile.render(el, { sitekey: '0x4AAAAAAFR3ELqQuQImumXO' });
+  });
+}
+</script>
+
+</body>
+</html>

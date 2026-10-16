@@ -1,0 +1,5 @@
+.DS_Store
+*.part
+/target
+.idea/
+/docs/launch/

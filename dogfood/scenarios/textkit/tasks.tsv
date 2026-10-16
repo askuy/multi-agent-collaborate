@@ -1,0 +1,6 @@
+Implement textkit.slugify	Implement textkit/slugify.py so that tests/test_slugify.py passes, and add a CHANGELOG line.	textkit/slugify.py
+Implement textkit.word_count	Implement textkit/word_count.py so that tests/test_word_count.py passes, and add a CHANGELOG line.	textkit/word_count.py
+Implement textkit.roman	Implement textkit/roman.py so that tests/test_roman.py passes, and add a CHANGELOG line.	textkit/roman.py
+Implement textkit.duration	Implement textkit/duration.py so that tests/test_duration.py passes, and add a CHANGELOG line.	textkit/duration.py
+Implement textkit.wrap	Implement textkit/wrap.py so that tests/test_wrap.py passes, and add a CHANGELOG line.	textkit/wrap.py
+Implement textkit.dedupe	Implement textkit/dedupe.py so that tests/test_dedupe.py passes, and add a CHANGELOG line.	textkit/dedupe.py

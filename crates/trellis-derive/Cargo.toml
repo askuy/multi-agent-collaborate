@@ -1,0 +1,18 @@
+[package]
+name = "trellis-derive"
+description = "Trellis derived data: indexes computed recursively from changesets and cached by (changeset, name, version)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+trellis-core = { workspace = true }
+trellis-store = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

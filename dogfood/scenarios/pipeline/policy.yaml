@@ -1,0 +1,9 @@
+# Trellis policy for the pipeline dogfooding run.
+rules:
+  - pattern: "CHANGELOG.md"
+    merge: union
+validators:
+  - name: tests
+    scope: ["pipeline/**", "tests/**"]
+    command: ["python3", "-m", "unittest", "discover", "-s", "tests"]
+    timeout_seconds: 120

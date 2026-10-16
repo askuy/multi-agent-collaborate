@@ -1,0 +1,19 @@
+[package]
+name = "trellis-client"
+description = "A blocking Rust client for the Trellis HTTP server, and directory checkouts bound to sessions."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+trellis-core = { workspace = true }
+trellis-coord = { workspace = true }
+trellis-land = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
